@@ -5,8 +5,16 @@ const colors = ["black", "white", "brown", "red", "yellow", "blue", "green", "or
 
 function App() {
   const [currentColor, setCurrentColor] = useState("");
-  const { transcript, resetTranscript } = useSpeechRecognition();
+  const { transcript, resetTranscript, listening } = useSpeechRecognition();
   const isSpeakingRef = useRef(false); // Ref to track if the app is currently speaking
+
+  // Function to start listening to user input
+  const startListening = useCallback(() => {
+    if (!isSpeakingRef.current && !listening) {
+      console.log("instruction output: Start listening..."); // Log when listening starts
+      SpeechRecognition.startListening({ continuous: true });
+    }
+  }, [listening]);
 
   // Function to provide spoken feedback using the Web Speech API
   const speak = useCallback((message) => {
@@ -20,18 +28,21 @@ function App() {
     const utterance = new SpeechSynthesisUtterance(message);
 
     // Stop listening before speaking
-    SpeechRecognition.stopListening();
+    if (listening) {
+      SpeechRecognition.stopListening();
+      console.log("instruction output: Microphone stopped for speaking...");
+    }
+
     utterance.onend = () => {
-      // Resume listening after speaking is done
+      // Mark speaking as done
       isSpeakingRef.current = false;
-      console.log("instruction output: Resume listening after speaking");
-      setTimeout(() => {
-        SpeechRecognition.startListening({ continuous: true });
-      }, 500); // Add a slight delay before resuming listening
+      console.log("instruction output: Finished speaking...");
+      resetTranscript(); // Reset transcript to ensure no residual inputs
+      startListening(); // Explicitly resume listening after speaking
     };
 
     synth.speak(utterance);
-  }, []);
+  }, [listening, resetTranscript, startListening]);
 
   // Function to set a new random color
   const setNewColor = useCallback(() => {
@@ -54,18 +65,9 @@ function App() {
     }
   }, [currentColor, speak]);
 
-  // Effect to run once initially to set up the first color
-  useEffect(() => {
-    if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
-      alert("Your browser does not support speech recognition software. Please try Google Chrome.");
-      return;
-    }
-    setNewColor();
-  }, [setNewColor]);
-
   // Effect to handle user input from the speech recognition transcript
   useEffect(() => {
-    if (isSpeakingRef.current) return; // Prevent processing transcript while speaking
+    if (isSpeakingRef.current || !listening) return; // Prevent processing transcript while speaking or if not listening
 
     const userInput = transcript.toLowerCase().trim();
     console.log(`voice input: ${userInput}`); // Log the user's speech input
@@ -85,14 +87,16 @@ function App() {
         resetTranscript(); // Reset after processing
       }
     }
-  }, [transcript, revealColor, checkAnswer, setNewColor, resetTranscript]);
+  }, [transcript, revealColor, checkAnswer, setNewColor, resetTranscript, listening]);
 
-  // Function to start listening to user input
-  const startListening = () => {
-    console.log("instruction output: Start listening..."); // Log when listening starts
-    alert("Listening for your commands..."); // Debug alert to confirm listening
-    SpeechRecognition.startListening({ continuous: true });
-  };
+  // Debugging for speech recognition events
+  useEffect(() => {
+    if (listening) {
+      console.log("instruction output: Microphone is now listening...");
+    } else {
+      console.log("instruction output: Microphone is not listening...");
+    }
+  }, [listening]);
 
   return (
     <div
@@ -107,7 +111,7 @@ function App() {
     >
       <button onClick={() => { 
         console.log("instruction output: Start Game button clicked"); // Log when "Start Game" button is clicked
-        startListening();
+        setNewColor(); // Set initial color and prompt
       }} style={{ padding: "10px 20px", fontSize: "1.5em" }}>
         Start Game
       </button>
