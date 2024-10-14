@@ -1,7 +1,7 @@
 import React from 'react';
 import SpeechRecognition from 'react-speech-recognition';
 
-const colors = ["black", "white", "brown", "red", "yellow", "blue", "green", "orange", "purple", "gray"];
+const colors = ["black", "white", "brown", "red", "yellow", "dark blue", "light blue", "dark green", "light green", "orange", "purple", "gray"];
 
 class App extends React.Component {
   constructor(props) {
@@ -11,6 +11,7 @@ class App extends React.Component {
       listening: false,
     };
     this.isSpeaking = false;
+    this.transcriptRef = "";
     this.recognition = null;
   }
 
@@ -58,7 +59,6 @@ class App extends React.Component {
     if (this.isSpeaking) return;
 
     console.log(`instruction output: ${message}`);
-    alert(`Speaking: ${message}`);
 
     this.isSpeaking = true;
     const synth = window.speechSynthesis;
@@ -79,6 +79,7 @@ class App extends React.Component {
 
   setNewColor = () => {
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    console.log(`New color chosen: ${randomColor}`);
     this.setState({ currentColor: randomColor });
     this.speak(`What is this color?`);
   };
@@ -107,7 +108,11 @@ class App extends React.Component {
       console.log("voice input: next");
       this.setNewColor();
     } else {
-      const matchedColor = colors.find(color => transcript.includes(color));
+      const matchedColor = colors.find(color => {
+        const colorWords = color.split(" ");
+        return colorWords.every(word => transcript.includes(word));
+      });
+
       if (matchedColor) {
         this.checkAnswer(matchedColor);
       }
