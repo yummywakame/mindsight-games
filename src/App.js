@@ -8,13 +8,26 @@ const colors = {
   "brown": "#8B4513",
   "red": "#DC143C",
   "yellow": "#FFD700",
-  "orange": "#FF8C00",
+  "orange": "#FF7F50",
   "light blue": "#87CEFA",
   "dark blue": "#0000FF",
-  "light green": "#ADFF2F",
+  "light green": "#5FFB17",
   "dark green": "#008000",
   "purple": "#6A5ACD",
   "pink": "#FF00FF"
+};
+
+const synonyms = {
+  "white": ["white", "what", "quite"],
+  "light green": ["light green", "green", "lime", "emerald"],
+  "dark green": ["dark green", "green", "forest"],
+  "purple": ["purple", "violet", "lavender"],
+  "pink": ["pink", "magenta"],
+  "red": ["red", "crimson", "maroon"],
+  "gray": ["gray", "silver"],
+  "dark blue": ["dark blue", "blue", "navy"],
+  "light blue": ["light blue", "blue", "cyan", "sky"],
+  "orange": ["orange", "dark yellow"]
 };
 
 class App extends React.Component {
@@ -108,8 +121,7 @@ class App extends React.Component {
 
   checkAnswer = (userInput) => {
     const matchedColor = Object.keys(colors).find(color => {
-      const colorWords = color.split(" ");
-      return colorWords.every(word => userInput.includes(word));
+      return userInput.includes(color) || (synonyms[color] && synonyms[color].some(synonym => userInput.includes(synonym)));
     });
 
     if (matchedColor && this.state.currentColor === colors[matchedColor]) {
@@ -130,6 +142,10 @@ class App extends React.Component {
     } else if (transcript === "next") {
       console.log("voice input: next");
       this.setNewColor();
+    } else if (transcript === "stop" || transcript === "restart" || transcript === "reset") {
+      console.log("voice input: Stop or restart the game");
+      this.stopListening();
+      this.setState({ currentColor: "" });
     } else {
       this.checkAnswer(transcript);
     }
@@ -139,6 +155,14 @@ class App extends React.Component {
     return (
       <div
         className="App"
+        onClick={() => {
+          console.log("instruction output: Screen clicked to start game");
+          this.setNewColor();
+        }}
+        onTouchStart={() => {
+          console.log("instruction output: Screen touched to start game");
+          this.setNewColor();
+        }}
         style={{
           backgroundColor: this.state.currentColor,
           height: "100vh",
@@ -147,15 +171,6 @@ class App extends React.Component {
           justifyContent: "center",
         }}
       >
-        <button
-          onClick={() => {
-            console.log("instruction output: Start Game button clicked");
-            this.setNewColor();
-          }}
-          style={{ padding: "10px 20px", fontSize: "1.5em" }}
-        >
-          Start Game
-        </button>
       </div>
     );
   }
