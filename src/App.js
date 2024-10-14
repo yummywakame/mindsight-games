@@ -1,5 +1,6 @@
 import React from 'react';
 import SpeechRecognition from 'react-speech-recognition';
+import InstructionsPage from './InstructionsPage';
 
 const colors = {
   "black": "#000000",
@@ -32,7 +33,8 @@ class App extends React.Component {
     this.state = {
       currentColor: "black",
       listening: false,
-      showInstructions: true,
+      showInstructions: false,
+      gameStarted: false,
     };
     this.isSpeaking = false;
     this.recognition = null;
@@ -50,12 +52,11 @@ class App extends React.Component {
     // Create a new SpeechRecognition instance
     this.recognition = SpeechRecognition.getRecognition();
     this.recognition.continuous = true;
-    this.recognition.interimResults = true; // Capture ongoing input
+    this.recognition.interimResults = true;
 
     this.recognition.onresult = (event) => {
       if (this.isSpeaking || !this.state.listening) return;
 
-      // Get the latest complete result (only final results are processed)
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           const transcript = event.results[i][0].transcript.toLowerCase().trim();
@@ -107,7 +108,7 @@ class App extends React.Component {
   setNewColor = () => {
     const randomColor = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
     console.log(`New color chosen: ${randomColor}`);
-    this.setState({ currentColor: colors[randomColor], showInstructions: false });
+    this.setState({ currentColor: colors[randomColor], showInstructions: false, gameStarted: true });
     this.speak(`What is this color?`);
   };
 
@@ -142,23 +143,40 @@ class App extends React.Component {
     } else if (transcript === "stop" || transcript === "restart" || transcript === "reset") {
       console.log("voice input: Stop or restart the game");
       this.stopListening();
-      this.setState({ currentColor: "black", showInstructions: true });
+      this.setState({ currentColor: "black", showInstructions: false, gameStarted: false });
     } else {
       this.checkAnswer(transcript);
     }
   };
 
   render() {
+    if (this.state.showInstructions) {
+      return (
+        <InstructionsPage
+          onBeginGame={() => {
+            console.log("instruction output: Begin game clicked");
+            this.setNewColor();
+          }}
+        />
+      );
+    }
+
     return (
       <div
         className="App"
-        onClick={() => {
-          console.log("instruction output: Screen clicked to start game");
-          this.setNewColor();
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            // Only start the game if clicking on the background
+            console.log("instruction output: Screen clicked to start game");
+            this.setNewColor();
+          }
         }}
-        onTouchStart={() => {
-          console.log("instruction output: Screen touched to start game");
-          this.setNewColor();
+        onTouchStart={(e) => {
+          if (e.target === e.currentTarget) {
+            // Only start the game if touching on the background
+            console.log("instruction output: Screen touched to start game");
+            this.setNewColor();
+          }
         }}
         style={{
           backgroundColor: this.state.currentColor,
@@ -171,38 +189,41 @@ class App extends React.Component {
           textAlign: "center",
         }}
       >
-        {this.state.showInstructions && (
-          <div style={{ padding: "20px", maxWidth: "600px" }}>
-            <h2>INSTRUCTIONS:</h2>
-            <p>
-              To play blindfolded, this app requires microphone access to hear your answers.
-              You'll need speakers to hear the answers. Please try a round without your
-              blindfold so that you can confirm any browser permissions for your mic that
-              will pop up and make sure it's working.
-            </p>
-            <p>
-              The randomized colors are: black, white, gray, brown, red, orange, yellow,
-              green, blue, purple, and pink. Say the color out aloud and clearly so that
-              the app can distinguish what you are saying. If at any time you want to know
-              what color it is, say "what color is it?".
-            </p>
-            <p>
-              The same color might appear multiple times in a row. This is by design.
-            </p>
-            <h3>To start the game:</h3>
-            <p>
-              Since you are blindfolded, you can click/tap anywhere on your screen.
-            </p>
-            <h3>To get a new color:</h3>
-            <p>
-              To get a new color or skip a color, click anywhere again. You can also say
-              "next". You won't get a new color until you do this. This allows you to get
-              familiar with the color for as long as you like.
-            </p>
-            <p>
-              Future updates: A randomized shape game.
-            </p>
-            <h3>Enjoy!</h3>
+        {!this.state.gameStarted && (
+          <div>
+            <h1>Mindsight Practice</h1>
+            <h2>Color Game</h2>
+            <div style={{ marginTop: "20px" }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event from bubbling to the background div
+                  console.log("instruction output: Instructions button clicked");
+                  this.setState({ showInstructions: true });
+                }}
+                style={{
+                  padding: "10px 20px",
+                  marginRight: "10px",
+                  fontSize: "1em",
+                  cursor: "pointer",
+                }}
+              >
+                Instructions
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event from bubbling to the background div
+                  console.log("instruction output: Start Game button clicked");
+                  this.setNewColor();
+                }}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: "1em",
+                  cursor: "pointer",
+                }}
+              >
+                Start Game
+              </button>
+            </div>
           </div>
         )}
       </div>
