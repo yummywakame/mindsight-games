@@ -1,7 +1,21 @@
 import React from 'react';
 import SpeechRecognition from 'react-speech-recognition';
 
-const colors = ["black", "white", "brown", "red", "yellow", "dark blue", "light blue", "dark green", "light green", "orange", "purple", "gray"];
+const colors = {
+  "black": "#000000",
+  "white": "#FFFFFF",
+  "gray": "#A9A9A9",
+  "brown": "#8B4513",
+  "red": "#DC143C",
+  "yellow": "#FFD700",
+  "orange": "#FF8C00",
+  "light blue": "#87CEFA",
+  "dark blue": "#0000FF",
+  "light green": "#ADFF2F",
+  "dark green": "#008000",
+  "purple": "#6A5ACD",
+  "pink": "#FF00FF"
+};
 
 class App extends React.Component {
   constructor(props) {
@@ -11,7 +25,6 @@ class App extends React.Component {
       listening: false,
     };
     this.isSpeaking = false;
-    this.transcriptRef = "";
     this.recognition = null;
   }
 
@@ -27,15 +40,19 @@ class App extends React.Component {
     // Create a new SpeechRecognition instance
     this.recognition = SpeechRecognition.getRecognition();
     this.recognition.continuous = true;
+    this.recognition.interimResults = true; // Capture ongoing input
 
     this.recognition.onresult = (event) => {
       if (this.isSpeaking || !this.state.listening) return;
 
-      // Get the latest result
-      const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      console.log(`voice input: ${transcript}`);
-
-      this.handleTranscript(transcript);
+      // Get the latest complete result (only final results are processed)
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript.toLowerCase().trim();
+          console.log(`voice input: ${transcript}`);
+          this.handleTranscript(transcript);
+        }
+      }
     };
   };
 
@@ -78,19 +95,25 @@ class App extends React.Component {
   };
 
   setNewColor = () => {
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const randomColor = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
     console.log(`New color chosen: ${randomColor}`);
-    this.setState({ currentColor: randomColor });
+    this.setState({ currentColor: colors[randomColor] });
     this.speak(`What is this color?`);
   };
 
   revealColor = () => {
-    this.speak(`The color is ${this.state.currentColor}.`);
+    const colorName = Object.keys(colors).find(key => colors[key] === this.state.currentColor);
+    this.speak(`The color is ${colorName}.`);
   };
 
   checkAnswer = (userInput) => {
-    if (userInput === this.state.currentColor) {
-      this.speak(`Well done! The color is ${this.state.currentColor}.`);
+    const matchedColor = Object.keys(colors).find(color => {
+      const colorWords = color.split(" ");
+      return colorWords.every(word => userInput.includes(word));
+    });
+
+    if (matchedColor && this.state.currentColor === colors[matchedColor]) {
+      this.speak(`Well done! The color is ${matchedColor}.`);
     } else {
       this.speak(`Try again.`);
     }
@@ -101,21 +124,14 @@ class App extends React.Component {
 
     console.log(`voice input processed: ${transcript}`);
 
-    if (transcript.includes("what is it") || transcript.includes("what color")) {
+    if (transcript === "what is it" || transcript === "what color") {
       console.log("voice input: What is it?");
       this.revealColor();
-    } else if (transcript.includes("next")) {
+    } else if (transcript === "next") {
       console.log("voice input: next");
       this.setNewColor();
     } else {
-      const matchedColor = colors.find(color => {
-        const colorWords = color.split(" ");
-        return colorWords.every(word => transcript.includes(word));
-      });
-
-      if (matchedColor) {
-        this.checkAnswer(matchedColor);
-      }
+      this.checkAnswer(transcript);
     }
   };
 
