@@ -4,29 +4,25 @@ import SpeechRecognition from 'react-speech-recognition';
 const colors = {
   "black": "#000000",
   "white": "#FFFFFF",
-  "gray": "#A9A9A9",
+  "gray": "#808080",
   "brown": "#8B4513",
   "red": "#DC143C",
   "yellow": "#FFD700",
   "orange": "#FF7F50",
-  "light blue": "#87CEFA",
-  "dark blue": "#0000FF",
-  "light green": "#5FFB17",
-  "dark green": "#008000",
+  "blue": "#1E90FF",
+  "green": "#008000",
   "purple": "#6A5ACD",
   "pink": "#FF00FF"
 };
 
 const synonyms = {
   "white": ["white", "what", "quite"],
-  "light green": ["light green", "green", "lime", "emerald"],
-  "dark green": ["dark green", "green", "forest"],
+  "green": ["green", "forest green"],
   "purple": ["purple", "violet", "lavender"],
   "pink": ["pink", "magenta"],
   "red": ["red", "crimson", "maroon"],
   "gray": ["gray", "silver"],
-  "dark blue": ["dark blue", "blue", "navy"],
-  "light blue": ["light blue", "blue", "cyan", "sky"],
+  "blue": ["blue", "sky"],
   "orange": ["orange", "dark yellow"]
 };
 
@@ -34,8 +30,9 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentColor: "",
+      currentColor: "black",
       listening: false,
+      showInstructions: true,
     };
     this.isSpeaking = false;
     this.recognition = null;
@@ -110,7 +107,7 @@ class App extends React.Component {
   setNewColor = () => {
     const randomColor = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
     console.log(`New color chosen: ${randomColor}`);
-    this.setState({ currentColor: colors[randomColor] });
+    this.setState({ currentColor: colors[randomColor], showInstructions: false });
     this.speak(`What is this color?`);
   };
 
@@ -145,7 +142,7 @@ class App extends React.Component {
     } else if (transcript === "stop" || transcript === "restart" || transcript === "reset") {
       console.log("voice input: Stop or restart the game");
       this.stopListening();
-      this.setState({ currentColor: "" });
+      this.setState({ currentColor: "black", showInstructions: true });
     } else {
       this.checkAnswer(transcript);
     }
@@ -169,8 +166,45 @@ class App extends React.Component {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          fontFamily: "'Raleway', sans-serif",
+          color: "white",
+          textAlign: "center",
         }}
       >
+        {this.state.showInstructions && (
+          <div style={{ padding: "20px", maxWidth: "600px" }}>
+            <h2>INSTRUCTIONS:</h2>
+            <p>
+              To play blindfolded, this app requires microphone access to hear your answers.
+              You'll need speakers to hear the answers. Please try a round without your
+              blindfold so that you can confirm any browser permissions for your mic that
+              will pop up and make sure it's working.
+            </p>
+            <p>
+              The randomized colors are: black, white, gray, brown, red, orange, yellow,
+              green, blue, purple, and pink. Say the color out aloud and clearly so that
+              the app can distinguish what you are saying. If at any time you want to know
+              what color it is, say "what color is it?".
+            </p>
+            <p>
+              The same color might appear multiple times in a row. This is by design.
+            </p>
+            <h3>To start the game:</h3>
+            <p>
+              Since you are blindfolded, you can click/tap anywhere on your screen.
+            </p>
+            <h3>To get a new color:</h3>
+            <p>
+              To get a new color or skip a color, click anywhere again. You can also say
+              "next". You won't get a new color until you do this. This allows you to get
+              familiar with the color for as long as you like.
+            </p>
+            <p>
+              Future updates: A randomized shape game.
+            </p>
+            <h3>Enjoy!</h3>
+          </div>
+        )}
       </div>
     );
   }
