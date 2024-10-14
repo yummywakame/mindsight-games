@@ -17,16 +17,21 @@ function App() {
 
   useEffect(() => {
     console.log("Transcript:", transcript); // Debugging: Log transcript to see if it captures speech correctly
-    const userInput = transcript.toLowerCase();
-    if (userInput.includes("what color is it") || userInput.includes("what is it")) {
+    const userInput = transcript.toLowerCase().trim();
+    const words = userInput.split(" ");
+
+    if (words.includes("what") && words.includes("color")) {
       revealColor();
       resetTranscript();
-    } else if (userInput.includes("next")) {
+    } else if (words.includes("next")) {
       setNewColor();
       resetTranscript();
-    } else if (colors.includes(userInput)) {
-      checkAnswer(userInput);
-      resetTranscript();
+    } else {
+      const matchedColor = colors.find(color => words.includes(color));
+      if (matchedColor) {
+        checkAnswer(matchedColor);
+        resetTranscript();
+      }
     }
   }, [transcript]);
 
@@ -78,4 +83,3 @@ function App() {
 }
 
 export default App;
-
