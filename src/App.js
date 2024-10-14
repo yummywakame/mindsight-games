@@ -1,6 +1,7 @@
 import React from 'react';
 import SpeechRecognition from 'react-speech-recognition';
 import InstructionsPage from './InstructionsPage';
+import Cookies from 'js-cookie';
 
 const colors = {
   "black": "#000000",
@@ -35,9 +36,20 @@ class App extends React.Component {
       listening: false,
       showInstructions: false,
       gameStarted: false,
+      selectedColors: Object.keys(colors), // Default to all colors
     };
     this.isSpeaking = false;
     this.recognition = null;
+
+    // Bind methods to this instance
+    this.setupRecognition = this.setupRecognition.bind(this);
+    this.startListening = this.startListening.bind(this);
+    this.stopListening = this.stopListening.bind(this);
+    this.speak = this.speak.bind(this);
+    this.setNewColor = this.setNewColor.bind(this);
+    this.revealColor = this.revealColor.bind(this);
+    this.checkAnswer = this.checkAnswer.bind(this);
+    this.handleTranscript = this.handleTranscript.bind(this);
   }
 
   componentDidMount() {
@@ -46,10 +58,15 @@ class App extends React.Component {
     } else {
       this.setupRecognition();
     }
+
+    // Load saved color preferences from cookies if available
+    const savedColors = Cookies.get('selectedColors');
+    if (savedColors) {
+      this.setState({ selectedColors: JSON.parse(savedColors) });
+    }
   }
 
-  setupRecognition = () => {
-    // Create a new SpeechRecognition instance
+  setupRecognition() {
     this.recognition = SpeechRecognition.getRecognition();
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
@@ -65,25 +82,25 @@ class App extends React.Component {
         }
       }
     };
-  };
+  }
 
-  startListening = () => {
+  startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log("instruction output: Start listening...");
       SpeechRecognition.startListening({ continuous: true });
       this.setState({ listening: true });
     }
-  };
+  }
 
-  stopListening = () => {
+  stopListening() {
     if (this.state.listening) {
       console.log("instruction output: Stop listening...");
       SpeechRecognition.stopListening();
       this.setState({ listening: false });
     }
-  };
+  }
 
-  speak = (message) => {
+  speak(message) {
     if (this.isSpeaking) return;
 
     console.log(`instruction output: ${message}`);
@@ -103,21 +120,23 @@ class App extends React.Component {
     };
 
     synth.speak(utterance);
-  };
+  }
 
-  setNewColor = () => {
-    const randomColor = Object.keys(colors)[Math.floor(Math.random() * Object.keys(colors).length)];
+  setNewColor() {
+    const { selectedColors } = this.state;
+    const colorsToChooseFrom = selectedColors.length > 0 ? selectedColors : ["white"];
+    const randomColor = colorsToChooseFrom[Math.floor(Math.random() * colorsToChooseFrom.length)];
     console.log(`New color chosen: ${randomColor}`);
     this.setState({ currentColor: colors[randomColor], showInstructions: false, gameStarted: true });
     this.speak(`What is this color?`);
-  };
+  }
 
-  revealColor = () => {
+  revealColor() {
     const colorName = Object.keys(colors).find(key => colors[key] === this.state.currentColor);
     this.speak(`The color is ${colorName}.`);
-  };
+  }
 
-  checkAnswer = (userInput) => {
+  checkAnswer(userInput) {
     const matchedColor = Object.keys(colors).find(color => {
       return userInput.includes(color) || (synonyms[color] && synonyms[color].some(synonym => userInput.includes(synonym)));
     });
@@ -127,9 +146,9 @@ class App extends React.Component {
     } else {
       this.speak(`Try again.`);
     }
-  };
+  }
 
-  handleTranscript = (transcript) => {
+  handleTranscript(transcript) {
     if (this.isSpeaking || !this.state.listening) return;
 
     console.log(`voice input processed: ${transcript}`);
@@ -147,7 +166,7 @@ class App extends React.Component {
     } else {
       this.checkAnswer(transcript);
     }
-  };
+  }
 
   render() {
     if (this.state.showInstructions) {
@@ -156,6 +175,14 @@ class App extends React.Component {
           onBeginGame={() => {
             console.log("instruction output: Begin game clicked");
             this.setNewColor();
+          }}
+          onBack={() => {
+            console.log("instruction output: Back button clicked");
+            this.setState({ showInstructions: false });
+          }}
+          onSavePreferences={(updatedColors) => {
+            Cookies.set('selectedColors', JSON.stringify(updatedColors), { expires: 365 });
+            this.setState({ selectedColors: updatedColors });
           }}
         />
       );
@@ -166,14 +193,12 @@ class App extends React.Component {
         className="App"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            // Only start the game if clicking on the background
             console.log("instruction output: Screen clicked to start game");
             this.setNewColor();
           }
         }}
         onTouchStart={(e) => {
           if (e.target === e.currentTarget) {
-            // Only start the game if touching on the background
             console.log("instruction output: Screen touched to start game");
             this.setNewColor();
           }
