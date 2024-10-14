@@ -16,11 +16,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (transcript.toLowerCase().includes("what color is it") || transcript.toLowerCase().includes("what is it")) {
+    console.log("Transcript:", transcript); // Debugging: Log transcript to see if it captures speech correctly
+    const userInput = transcript.toLowerCase();
+    if (userInput.includes("what color is it") || userInput.includes("what is it")) {
       revealColor();
       resetTranscript();
-    } else if (transcript.toLowerCase().includes("next")) {
+    } else if (userInput.includes("next")) {
       setNewColor();
+      resetTranscript();
+    } else if (colors.includes(userInput)) {
+      checkAnswer(userInput);
       resetTranscript();
     }
   }, [transcript]);
@@ -28,13 +33,29 @@ function App() {
   const setNewColor = () => {
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     setCurrentColor(randomColor);
+    speak(`What is this color?`);
   };
 
   const revealColor = () => {
-    alert(`The color is ${currentColor}.`);
+    speak(`The color is ${currentColor}.`);
+  };
+
+  const checkAnswer = (userInput) => {
+    if (userInput === currentColor) {
+      speak(`Well done! The color is ${currentColor}.`);
+    } else {
+      speak(`Try again.`);
+    }
+  };
+
+  const speak = (message) => {
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(message);
+    synth.speak(utterance);
   };
 
   const startListening = () => {
+    console.log("Listening..."); // Debugging: Log when listening starts
     SpeechRecognition.startListening({ continuous: true });
   };
 
