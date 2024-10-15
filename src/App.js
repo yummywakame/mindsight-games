@@ -4,20 +4,11 @@ import ColorGame from './ColorGame';
 import InstructionsPage from './InstructionsPage';
 import Preferences from './Preferences';
 import HamburgerMenu from './HamburgerMenu';
+import './css/App.css'; // Importing the App CSS
 
 function App() {
   return (
-    <div
-      className="App"
-      style={{
-        backgroundColor: 'black',
-        minHeight: '100vh',
-        padding: '20px',
-        fontFamily: "'Raleway', sans-serif",
-        color: 'white',
-        textAlign: 'center',
-      }}
-    >
+    <div className="App">
       <HamburgerMenu />
       <Routes>
         <Route
@@ -25,29 +16,12 @@ function App() {
           element={
             <div>
               <h1>Mindsight Practice</h1>
-              <div style={{ marginTop: '20px' }}>
+              <div className="home-buttons">
                 <Link to="/color-game">
-                  <button
-                    style={{
-                      padding: '10px 20px',
-                      marginRight: '10px',
-                      fontSize: '1em',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Color Game
-                  </button>
+                  <button>Color Game</button>
                 </Link>
                 <Link to="/instructions">
-                  <button
-                    style={{
-                      padding: '10px 20px',
-                      fontSize: '1em',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Instructions
-                  </button>
+                  <button>Instructions</button>
                 </Link>
               </div>
             </div>
