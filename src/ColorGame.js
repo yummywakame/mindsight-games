@@ -48,45 +48,56 @@ class ColorGame extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    this.cleanupRecognition();
+    console.log('Speech recognition instance cleaned up.');
+  }
+
   setupRecognition() {
-    if (this.recognition) {
-      // Remove previous listeners if any
-      this.recognition.onresult = null;
-    }
+    if (!this.recognition) {
+      this.recognition = SpeechRecognition.getRecognition();
+      this.recognition.continuous = true;
+      this.recognition.interimResults = true;
 
-    this.recognition = SpeechRecognition.getRecognition();
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true;
+      // Adding event listener for recognition results
+      this.recognition.onresult = (event) => {
+        if (this.isSpeaking || !this.state.listening) return;
 
-    // Adding event listener for recognition results
-    this.recognition.onresult = (event) => {
-      if (this.isSpeaking || !this.state.listening) return;
-
-      console.log('Received voice input result...');
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          const transcript = event.results[i][0].transcript.toLowerCase().trim();
-          console.log(`voice input: ${transcript}`);
-          this.handleTranscript(transcript);
+        console.log('Received voice input result...');
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            const transcript = event.results[i][0].transcript.toLowerCase().trim();
+            console.log(`voice input: ${transcript}`);
+            this.handleTranscript(transcript);
+          }
         }
-      }
-    };
+      };
 
-    console.log('Speech recognition setup complete.');
+      console.log('Speech recognition setup complete.');
+    }
+  }
+
+  cleanupRecognition() {
+    if (this.recognition) {
+      try {
+        this.recognition.onresult = null; // Remove event listener
+        this.recognition.stop(); // Stop listening
+        this.recognition.abort(); // Abort to ensure the mic is stopped completely
+      } catch (error) {
+        console.warn('Warning: Attempt to stop recognition failed.');
+      } finally {
+        SpeechRecognition.stopListening(); // Additional cleanup to ensure the mic stops
+        this.recognition = null; // Clean up recognition instance
+      }
+    }
   }
 
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log('instruction output: Start listening...');
-      if (this.recognition) {
-        try {
-          this.recognition.stop(); // Ensure previous recognition is stopped
-        } catch (error) {
-          console.warn('Warning: Attempt to stop recognition failed.');
-        }
-      }
-      this.setupRecognition(); // Re-set up recognition to ensure event listener is properly attached
-      this.recognition.start(); // Explicitly start the recognition
+      this.cleanupRecognition(); // Clean up any previous recognition
+      this.setupRecognition(); // Set up recognition again
+      SpeechRecognition.startListening({ continuous: true }); // Start listening using SpeechRecognition API
       this.setState({ listening: true }, () => {
         console.log('Listening state updated: ', this.state.listening);
       });
@@ -96,13 +107,15 @@ class ColorGame extends React.Component {
   stopListening() {
     if (this.state.listening) {
       console.log('instruction output: Stop listening...');
-      if (this.recognition) {
-        try {
-          this.recognition.stop(); // Explicitly stop the recognition
-          this.recognition.abort(); // Abort to ensure the microphone stops
-        } catch (error) {
-          console.warn('Warning: Attempt to stop recognition failed.');
+      try {
+        if (this.recognition) {
+          this.recognition.stop();
+          this.recognition.abort();
         }
+      } catch (error) {
+        console.warn('Warning: Attempt to stop recognition failed.');
+      } finally {
+        SpeechRecognition.stopListening(); // Additional stop to ensure everything stops
       }
       this.setState({ listening: false }, () => {
         console.log('Listening state updated: ', this.state.listening);
@@ -155,7 +168,7 @@ class ColorGame extends React.Component {
 
   startGame() {
     console.log('Game started');
-    this.stopListening(); // Ensure any previous session is properly stopped
+    this.cleanupRecognition(); // Ensure any previous session is properly stopped
     this.setState({ gameStarted: true }, () => {
       this.setupRecognition(); // Reinitialize recognition to ensure clean start
       this.setNewColor();
