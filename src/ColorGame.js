@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
 import voiceHandler from './VoiceHandler';
+import './css/ColorGame.css'; // Import the new CSS file
 
 // Colors definition moved here
 const colors = {
@@ -161,8 +162,10 @@ class ColorGame extends React.Component {
 
     if (isCorrect) {
       voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
-    } else if (Object.keys(colors).includes(transcript) || synonymsList.some((syn) => transcript.includes(syn))) {
-      voiceHandler.speak('Try again.');
+    } else {
+      if (Object.keys(colors).some(color => transcript.includes(color) || synonymsList.includes(transcript))) {
+        voiceHandler.speak('Try again.');
+      }
     }
   }
 
@@ -179,7 +182,7 @@ class ColorGame extends React.Component {
   stopGameAndReset() {
     this.stopListening();
     setTimeout(() => {
-      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
+      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: false }, () => {
         console.log('Game stopped and reset.');
       });
     }, 500); // Adding delay to ensure recognition fully stops before resetting
@@ -196,25 +199,18 @@ class ColorGame extends React.Component {
       <div
         className="ColorGame"
         onClick={(e) => {
-          if (e.target === e.currentTarget && !gameStarted) {
-            console.log('instruction output: Background clicked to start the game');
-            this.startGame();
-          } else if (e.target === e.currentTarget && gameStarted) {
-            console.log('instruction output: Screen clicked to get a new color');
-            this.setNewColor();
+          if (e.target === e.currentTarget) {
+            if (gameStarted) {
+              console.log('instruction output: Screen clicked to get a new color');
+              this.setNewColor(); // Triggering the same function as voice command "next"
+            } else {
+              console.log('instruction output: Start Game background clicked');
+              this.startGame(); // Allowing click on the background to start the game
+            }
           }
         }}
         style={{
           backgroundColor: currentColorName ? colors[currentColorName] : 'black',
-          height: '100vh',
-          width: '100vw',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: "'Raleway', sans-serif",
-          color: 'white',
-          textAlign: 'center',
-          cursor: 'pointer',
         }}
       >
         <div>
@@ -226,12 +222,7 @@ class ColorGame extends React.Component {
                 console.log('instruction output: Start Game button clicked');
                 this.startGame();
               }}
-              style={{
-                padding: '10px 20px',
-                marginTop: '20px',
-                fontSize: '1.2em',
-                cursor: 'pointer',
-              }}
+              className="StartGameButton"
             >
               Start Game
             </button>
@@ -243,13 +234,7 @@ class ColorGame extends React.Component {
                 console.log('instruction output: Stop Game button clicked');
                 this.stopGameAndReset();
               }}
-              style={{
-                padding: '10px 20px',
-                marginLeft: '20px',
-                fontSize: '1.2em',
-                cursor: 'pointer',
-                marginTop: '0',
-              }}
+              className="StopHomeButton"
             >
               Stop
             </button>
