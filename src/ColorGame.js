@@ -3,7 +3,7 @@ import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
 import voiceHandler from './VoiceHandler';
 
-// Colors definition moved here
+// Colors definition
 const colors = {
   black: '#000000',
   white: '#FFFFFF',
@@ -21,11 +21,11 @@ class ColorGame extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentColor: 'black',
+      currentColorName: '',
       listening: false,
+      gameStarted: false,
     };
     this.isSpeaking = false;
-    this.recognition = null;
 
     // Bind methods to this instance
     this.setupRecognition = this.setupRecognition.bind(this);
@@ -33,14 +33,15 @@ class ColorGame extends React.Component {
     this.stopListening = this.stopListening.bind(this);
     this.setNewColor = this.setNewColor.bind(this);
     this.handleTranscript = this.handleTranscript.bind(this);
+    this.startGame = this.startGame.bind(this);
   }
 
   componentDidMount() {
     if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
       alert('Your browser does not support speech recognition software. Please try Google Chrome.');
     } else {
+      console.log('Initializing speech recognition...');
       this.setupRecognition();
-      this.setNewColor(); // Start the game when the component loads
     }
   }
 
@@ -49,9 +50,11 @@ class ColorGame extends React.Component {
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
 
+    // Adding event listener for recognition results
     this.recognition.onresult = (event) => {
       if (this.isSpeaking || !this.state.listening) return;
 
+      console.log('Received voice input result...');
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           const transcript = event.results[i][0].transcript.toLowerCase().trim();
@@ -60,67 +63,92 @@ class ColorGame extends React.Component {
         }
       }
     };
+
+    console.log('Speech recognition setup complete.');
   }
 
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log('instruction output: Start listening...');
-      SpeechRecognition.startListening({ continuous: true });
-      this.setState({ listening: true });
+      this.recognition.start(); // Explicitly start the recognition
+      this.setState({ listening: true }, () => {
+        console.log('Listening state updated: ', this.state.listening);
+      });
     }
   }
 
   stopListening() {
     if (this.state.listening) {
       console.log('instruction output: Stop listening...');
-      SpeechRecognition.stopListening();
-      this.setState({ listening: false });
+      this.recognition.stop(); // Explicitly stop the recognition
+      this.setState({ listening: false }, () => {
+        console.log('Listening state updated: ', this.state.listening);
+      });
     }
   }
 
   setNewColor() {
     const colorsArray = Object.keys(colors);
-    const randomColor = colorsArray[Math.floor(Math.random() * colorsArray.length)];
-    console.log(`New color chosen: ${colors[randomColor]}`);
-    this.setState({ currentColor: colors[randomColor] });
-    voiceHandler.speak("What's this color?");
+    const randomColorName = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+    console.log(`New color chosen: ${randomColorName}`);
+    this.setState({ currentColorName: randomColorName }, () => {
+      voiceHandler.speak("What's this color?");
+    });
   }
 
   handleTranscript(transcript) {
     if (this.isSpeaking || !this.state.listening) return;
 
-    console.log(`voice input processed: ${transcript}`);
+    const cleanedTranscript = transcript.toLowerCase().trim();
+    const currentColorName = this.state.currentColorName.toLowerCase().trim();
 
-    if (transcript === 'what is it' || transcript === 'what color') {
+    console.log(`voice input processed: ${cleanedTranscript}`);
+
+    if (cleanedTranscript === 'what is it' || cleanedTranscript === 'what color') {
       console.log('voice input: What is it?');
-      voiceHandler.speak('The color is ' + this.getColorName());
-    } else if (transcript === 'next') {
+      voiceHandler.speak('The color is ' + this.state.currentColorName);
+    } else if (cleanedTranscript === 'next') {
       console.log('voice input: next');
       this.setNewColor();
-    } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
+    } else if (cleanedTranscript === 'stop' || cleanedTranscript === 'restart' || cleanedTranscript === 'reset') {
       console.log('voice input: Stop or restart the game');
       this.stopListening();
-      this.setState({ currentColor: 'black' });
+      this.setState({ currentColorName: '', gameStarted: false });
     } else {
-      voiceHandler.checkAnswer(transcript, this.state.currentColor, colors);
+      console.log(`Checking answer: transcript: "${cleanedTranscript}" vs color: "${currentColorName}"`);
+      if (cleanedTranscript === currentColorName) {
+        voiceHandler.speak(`Well done! The color is ${this.state.currentColorName}.`);
+        this.setNewColor(); // Automatically advance to the next color if correct
+      } else {
+        voiceHandler.speak('Try again.');
+      }
     }
   }
 
-  getColorName() {
-    return Object.keys(colors).find((key) => colors[key] === this.state.currentColor);
+  startGame() {
+    console.log('Game started');
+    this.setState({ gameStarted: true }, () => {
+      this.setNewColor();
+      this.startListening();
+    });
   }
 
   render() {
+    const { gameStarted, currentColorName } = this.state;
+
     return (
       <div
         className="ColorGame"
-        onClick={() => {
-          console.log('instruction output: Screen clicked to get a new color');
-          this.setNewColor();
+        onClick={(e) => {
+          if (e.target === e.currentTarget && gameStarted) {
+            console.log('instruction output: Screen clicked to get a new color');
+            this.setNewColor();
+          }
         }}
         style={{
-          backgroundColor: this.state.currentColor,
+          backgroundColor: currentColorName ? colors[currentColorName] : 'black',
           height: '100vh',
+          width: '100vw',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -132,7 +160,37 @@ class ColorGame extends React.Component {
       >
         <div>
           <h1>Color Game</h1>
-          <p>Click anywhere to get a new color.</p>
+          {!gameStarted && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent button click from triggering background click
+                console.log('instruction output: Start Game button clicked');
+                this.startGame();
+              }}
+              style={{
+                padding: '10px 20px',
+                marginTop: '20px',
+                fontSize: '1.2em',
+                cursor: 'pointer',
+              }}
+            >
+              Start Game
+            </button>
+          )}
+          <button
+            onClick={() => {
+              this.props.history.push('/');
+            }}
+            style={{
+              padding: '10px 20px',
+              marginLeft: '20px',
+              fontSize: '1.2em',
+              cursor: 'pointer',
+              marginTop: !gameStarted ? '20px' : '0',
+            }}
+          >
+            Home
+          </button>
         </div>
       </div>
     );
