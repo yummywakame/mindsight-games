@@ -138,40 +138,19 @@ class ColorGame extends React.Component {
     console.log(`voice input processed: ${transcript}`);
 
     if (transcript === 'what is it' || transcript === 'what color') {
-        console.log('voice input: What is it?');
-        voiceHandler.speak('The color is ' + this.state.currentColorName);
+      console.log('voice input: What is it?');
+      voiceHandler.speak('The color is ' + this.state.currentColorName);
     } else if (transcript === 'next') {
-        console.log('voice input: next');
-        this.setNewColor();
+      console.log('voice input: next');
+      this.setNewColor();
     } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
-        console.log('voice input: Stop or restart the game');
-        this.stopGameAndReset();
+      console.log('voice input: Stop or restart the game');
+      this.stopGameAndReset();
     } else {
-        const currentColorName = this.state.currentColorName;
-        const synonymsList = voiceHandler.getSynonyms(currentColorName);
-
-        // Check if the input matches the correct color or its synonyms
-        const isCorrect =
-            transcript.includes(currentColorName) ||
-            synonymsList.some((syn) => transcript.includes(syn));
-
-        if (isCorrect) {
-            voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
-        } else {
-            // Check if the transcript is any color or its synonym
-            const isAnyColor = Object.keys(colors).some((color) => {
-                return (
-                    transcript.includes(color) ||
-                    voiceHandler.getSynonyms(color).some((syn) => transcript.includes(syn))
-                );
-            });
-
-            if (isAnyColor) {
-                voiceHandler.speak('Try again.');
-            }
-        }
+      // Check if the answer is correct
+      this.isCorrectColor(transcript);
     }
-}
+  }
 
   isCorrectColor(transcript) {
     const currentColorName = this.state.currentColorName;
@@ -182,7 +161,7 @@ class ColorGame extends React.Component {
 
     if (isCorrect) {
       voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
-    } else {
+    } else if (Object.keys(colors).includes(transcript) || synonymsList.some((syn) => transcript.includes(syn))) {
       voiceHandler.speak('Try again.');
     }
   }
@@ -200,7 +179,7 @@ class ColorGame extends React.Component {
   stopGameAndReset() {
     this.stopListening();
     setTimeout(() => {
-      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: false }, () => {
+      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
         console.log('Game stopped and reset.');
       });
     }, 500); // Adding delay to ensure recognition fully stops before resetting
@@ -217,7 +196,10 @@ class ColorGame extends React.Component {
       <div
         className="ColorGame"
         onClick={(e) => {
-          if (e.target === e.currentTarget && gameStarted) {
+          if (e.target === e.currentTarget && !gameStarted) {
+            console.log('instruction output: Background clicked to start the game');
+            this.startGame();
+          } else if (e.target === e.currentTarget && gameStarted) {
             console.log('instruction output: Screen clicked to get a new color');
             this.setNewColor();
           }
@@ -237,7 +219,7 @@ class ColorGame extends React.Component {
       >
         <div>
           <h1>Color Game</h1>
-          {!gameStarted ? (
+          {!gameStarted && (
             <button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent button click from triggering background click
@@ -253,7 +235,8 @@ class ColorGame extends React.Component {
             >
               Start Game
             </button>
-          ) : (
+          )}
+          {gameStarted && (
             <button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent button click from triggering background click
@@ -262,9 +245,10 @@ class ColorGame extends React.Component {
               }}
               style={{
                 padding: '10px 20px',
-                marginTop: '20px',
+                marginLeft: '20px',
                 fontSize: '1.2em',
                 cursor: 'pointer',
+                marginTop: '0',
               }}
             >
               Stop
