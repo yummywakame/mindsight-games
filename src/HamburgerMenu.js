@@ -4,36 +4,22 @@ import { Link } from 'react-router-dom';
 import './css/HamburgerMenu.css';
 
 class HamburgerMenu extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      menuOpen: false,
-    };
-  }
-
-  handleStateChange(state) {
-    this.setState({ menuOpen: state.isOpen });
-  }
-
-  closeMenu() {
-    this.setState({ menuOpen: false });
-  }
+  static defaultProps = {
+    customBurgerIcon: <img src="path/to/burger/icon.png" alt="Menu" />,
+    customCrossIcon: <img src="path/to/cross/icon.png" alt="Close" />
+  };
 
   render() {
     return (
-      <div className="hamburger-menu-container"> {/* New container */}
-        <Menu
-          isOpen={this.state.menuOpen}
-          onStateChange={(state) => this.handleStateChange(state)}
-        >
-          <Link to="/" onClick={() => this.closeMenu()}>Home</Link>
-          <Link to="/instructions" onClick={() => this.closeMenu()}>Instructions</Link>
-          <Link to="/preferences" onClick={() => this.closeMenu()}>Preferences</Link>
-          <Link to="/color-game" onClick={() => this.closeMenu()}>Color Game</Link>
-        </Menu>
-      </div>
+      <Menu {...this.props}>
+        <Link to="/">Home</Link>
+        <Link to="/instructions">Instructions</Link>
+        <Link to="/preferences">Preferences</Link>
+        <Link to="/color-game">Color Game</Link>
+      </Menu>
     );
   }
 }
 
 export default HamburgerMenu;
+

@@ -3,9 +3,8 @@ import { Navigate } from 'react-router-dom';
 import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
 import voiceHandler from './VoiceHandler';
-import './css/ColorGame.css'; // Import the new CSS file
+import './css/ColorGame.css';
 
-// Colors definition moved here
 const colors = {
   black: '#000000',
   white: '#FFFFFF',
@@ -27,6 +26,7 @@ class ColorGame extends React.Component {
       listening: false,
       gameStarted: false,
       navigateToHome: false,
+      selectedColors: {},
     };
     this.isSpeaking = false;
 
@@ -38,9 +38,12 @@ class ColorGame extends React.Component {
     this.handleTranscript = this.handleTranscript.bind(this);
     this.startGame = this.startGame.bind(this);
     this.stopGameAndReset = this.stopGameAndReset.bind(this);
+    this.initializeColorPreferences = this.initializeColorPreferences.bind(this);
   }
 
   componentDidMount() {
+    this.initializeColorPreferences();
+
     if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
       alert('Your browser does not support speech recognition software. Please try Google Chrome.');
     } else {
@@ -52,6 +55,35 @@ class ColorGame extends React.Component {
   componentWillUnmount() {
     this.cleanupRecognition();
     console.log('Speech recognition instance cleaned up.');
+  }
+
+  initializeColorPreferences() {
+    // Load saved preferences from cookies if available
+    const savedPreferences = Cookies.get('selectedColors');
+    if (savedPreferences) {
+      try {
+        const selectedColors = JSON.parse(savedPreferences);
+        this.setState({ selectedColors });
+      } catch (error) {
+        console.error('Error parsing saved preferences:', error);
+        this.setAllColorsSelected();
+      }
+    } else {
+      // No cookie found or cookie is missing
+      this.setAllColorsSelected();
+    }
+  }
+
+  setAllColorsSelected() {
+    const initialColors = {};
+    Object.keys(colors).forEach((color) => {
+      initialColors[color] = true;
+    });
+    this.setState({ selectedColors: initialColors }, () => {
+      // Save the initial preferences as a cookie immediately after setting
+      Cookies.set('selectedColors', JSON.stringify(initialColors), { expires: 365 });
+      console.log('Initial color preferences cookie created with all colors selected.');
+    });
   }
 
   setupRecognition() {
@@ -125,8 +157,9 @@ class ColorGame extends React.Component {
   }
 
   setNewColor() {
-    const colorsArray = Object.keys(colors);
-    const randomColorName = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+    const { selectedColors } = this.state;
+    const availableColors = Object.keys(selectedColors).filter((color) => selectedColors[color]);
+    const randomColorName = availableColors[Math.floor(Math.random() * availableColors.length)];
     console.log(`New color chosen: ${randomColorName}`);
     this.setState({ currentColorName: randomColorName }, () => {
       voiceHandler.speak("What's this color?");
@@ -162,10 +195,8 @@ class ColorGame extends React.Component {
 
     if (isCorrect) {
       voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
-    } else {
-      if (Object.keys(colors).some(color => transcript.includes(color) || synonymsList.includes(transcript))) {
-        voiceHandler.speak('Try again.');
-      }
+    } else if (Object.keys(colors).some((color) => transcript.includes(color))) {
+      voiceHandler.speak('Try again.');
     }
   }
 
@@ -182,7 +213,7 @@ class ColorGame extends React.Component {
   stopGameAndReset() {
     this.stopListening();
     setTimeout(() => {
-      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: false }, () => {
+      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
         console.log('Game stopped and reset.');
       });
     }, 500); // Adding delay to ensure recognition fully stops before resetting
@@ -199,18 +230,22 @@ class ColorGame extends React.Component {
       <div
         className="ColorGame"
         onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            if (gameStarted) {
-              console.log('instruction output: Screen clicked to get a new color');
-              this.setNewColor(); // Triggering the same function as voice command "next"
-            } else {
-              console.log('instruction output: Start Game background clicked');
-              this.startGame(); // Allowing click on the background to start the game
-            }
+          if (e.target === e.currentTarget && gameStarted) {
+            console.log('instruction output: Screen clicked to get a new color');
+            this.setNewColor();
           }
         }}
         style={{
           backgroundColor: currentColorName ? colors[currentColorName] : 'black',
+          height: '100vh',
+          width: '100vw',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: "'Raleway', sans-serif",
+          color: 'white',
+          textAlign: 'center',
+          cursor: 'pointer',
         }}
       >
         <div>
@@ -222,21 +257,14 @@ class ColorGame extends React.Component {
                 console.log('instruction output: Start Game button clicked');
                 this.startGame();
               }}
-              className="StartGameButton"
+              style={{
+                padding: '10px 20px',
+                marginTop: '20px',
+                fontSize: '1.2em',
+                cursor: 'pointer',
+              }}
             >
               Start Game
-            </button>
-          )}
-          {gameStarted && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent button click from triggering background click
-                console.log('instruction output: Stop Game button clicked');
-                this.stopGameAndReset();
-              }}
-              className="StopHomeButton"
-            >
-              Stop
             </button>
           )}
         </div>
