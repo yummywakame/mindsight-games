@@ -1,34 +1,46 @@
 import React from 'react';
 import SpeechRecognition from 'react-speech-recognition';
-import VoiceHandler from './VoiceHandler';
+import Cookies from 'js-cookie';
+import voiceHandler from './VoiceHandler';
+
+// Colors definition moved here
+const colors = {
+  black: '#000000',
+  white: '#FFFFFF',
+  gray: '#808080',
+  yellow: '#FFD700',
+  green: '#008000',
+  blue: '#1E90FF',
+  purple: '#6A5ACD',
+  pink: '#FF00FF',
+  red: '#DC143C',
+  orange: '#FF7F50',
+};
 
 class ColorGame extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       currentColor: 'black',
-      gameStarted: false,
       listening: false,
     };
-
     this.isSpeaking = false;
     this.recognition = null;
 
-    // Bind functions
+    // Bind methods to this instance
     this.setupRecognition = this.setupRecognition.bind(this);
     this.startListening = this.startListening.bind(this);
     this.stopListening = this.stopListening.bind(this);
-    this.speak = this.speak.bind(this);
     this.setNewColor = this.setNewColor.bind(this);
-    this.startGame = this.startGame.bind(this);
     this.handleTranscript = this.handleTranscript.bind(this);
   }
 
   componentDidMount() {
     if (!SpeechRecognition.browserSupportsSpeechRecognition()) {
-      alert("Your browser does not support speech recognition software. Please try Google Chrome.");
+      alert('Your browser does not support speech recognition software. Please try Google Chrome.');
     } else {
       this.setupRecognition();
+      this.setNewColor(); // Start the game when the component loads
     }
   }
 
@@ -52,7 +64,7 @@ class ColorGame extends React.Component {
 
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
-      console.log("instruction output: Start listening...");
+      console.log('instruction output: Start listening...');
       SpeechRecognition.startListening({ continuous: true });
       this.setState({ listening: true });
     }
@@ -60,59 +72,18 @@ class ColorGame extends React.Component {
 
   stopListening() {
     if (this.state.listening) {
-      console.log("instruction output: Stop listening...");
+      console.log('instruction output: Stop listening...');
       SpeechRecognition.stopListening();
       this.setState({ listening: false });
     }
   }
 
-  speak(message) {
-    if (this.isSpeaking) return;
-
-    console.log(`instruction output: ${message}`);
-
-    this.isSpeaking = true;
-    const synth = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(message);
-
-    this.stopListening();
-
-    utterance.onend = () => {
-      this.isSpeaking = false;
-      console.log("instruction output: Finished speaking...");
-      setTimeout(() => {
-        this.startListening();
-      }, 1000);
-    };
-
-    synth.speak(utterance);
-  }
-
   setNewColor() {
-    const colors = [
-      '#000000', // black
-      '#FFFFFF', // white
-      '#808080', // gray
-      '#8B4513', // brown
-      '#DC143C', // red
-      '#FFD700', // yellow
-      '#FF7F50', // orange
-      '#1E90FF', // blue
-      '#008000', // green
-      '#6A5ACD', // purple
-      '#FF00FF', // pink
-    ];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    console.log(`New color chosen: ${randomColor}`);
-    this.setState({ currentColor: randomColor });
-    this.speak("What's this color?");
-  }
-
-  startGame() {
-    console.log('Game started');
-    this.setNewColor();
-    this.setState({ gameStarted: true });
-    this.startListening();
+    const colorsArray = Object.keys(colors);
+    const randomColor = colorsArray[Math.floor(Math.random() * colorsArray.length)];
+    console.log(`New color chosen: ${colors[randomColor]}`);
+    this.setState({ currentColor: colors[randomColor] });
+    voiceHandler.speak("What's this color?");
   }
 
   handleTranscript(transcript) {
@@ -120,81 +91,49 @@ class ColorGame extends React.Component {
 
     console.log(`voice input processed: ${transcript}`);
 
-    if (transcript === 'next') {
+    if (transcript === 'what is it' || transcript === 'what color') {
+      console.log('voice input: What is it?');
+      voiceHandler.speak('The color is ' + this.getColorName());
+    } else if (transcript === 'next') {
       console.log('voice input: next');
       this.setNewColor();
     } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
       console.log('voice input: Stop or restart the game');
       this.stopListening();
-      this.setState({ currentColor: 'black', gameStarted: false });
+      this.setState({ currentColor: 'black' });
     } else {
-      VoiceHandler.checkAnswer(transcript, this.state.currentColor, colors);
+      voiceHandler.checkAnswer(transcript, this.state.currentColor, colors);
     }
+  }
+
+  getColorName() {
+    return Object.keys(colors).find((key) => colors[key] === this.state.currentColor);
   }
 
   render() {
     return (
       <div
         className="ColorGame"
-        onClick={(e) => {
-          if (this.state.gameStarted && e.target === e.currentTarget) {
-            console.log('instruction output: Screen clicked to get a new color');
-            this.setNewColor();
-          }
+        onClick={() => {
+          console.log('instruction output: Screen clicked to get a new color');
+          this.setNewColor();
         }}
         style={{
           backgroundColor: this.state.currentColor,
           height: '100vh',
-          width: '100vw',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: "'Raleway', sans-serif",
           color: 'white',
           textAlign: 'center',
-          margin: '0',
-          overflow: 'hidden',
+          cursor: 'pointer',
         }}
       >
-        {!this.state.gameStarted ? (
-          <div>
-            <h1>Color Game</h1>
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevents the background from being clicked
-                this.startGame();
-              }}
-              style={{
-                padding: '10px 20px',
-                fontSize: '1em',
-                cursor: 'pointer',
-                marginTop: '20px',
-              }}
-            >
-              Start Game
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevents the background from being clicked
-                this.props.history.push('/');
-              }}
-              style={{
-                padding: '10px 20px',
-                fontSize: '1em',
-                cursor: 'pointer',
-                marginLeft: '20px',
-                marginTop: '20px',
-              }}
-            >
-              Home
-            </button>
-          </div>
-        ) : (
-          <div>
-            <h1>Color Game</h1>
-            <p>Click anywhere to get a new color.</p>
-          </div>
-        )}
+        <div>
+          <h1>Color Game</h1>
+          <p>Click anywhere to get a new color.</p>
+        </div>
       </div>
     );
   }
