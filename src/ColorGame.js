@@ -3,7 +3,7 @@ import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
 import voiceHandler from './VoiceHandler';
 
-// Colors definition
+// Colors definition moved here
 const colors = {
   black: '#000000',
   white: '#FFFFFF',
@@ -15,6 +15,18 @@ const colors = {
   pink: '#FF00FF',
   red: '#DC143C',
   orange: '#FF7F50',
+};
+
+// Extracting synonyms from VoiceHandler
+const synonyms = {
+  white: ['white', 'what', 'quite'],
+  green: ['green', 'forest green'],
+  purple: ['purple', 'violet', 'lavender'],
+  pink: ['pink', 'magenta'],
+  red: ['red', 'crimson', 'maroon'],
+  gray: ['gray', 'silver'],
+  blue: ['blue', 'sky'],
+  orange: ['orange', 'dark yellow'],
 };
 
 class ColorGame extends React.Component {
@@ -46,6 +58,11 @@ class ColorGame extends React.Component {
   }
 
   setupRecognition() {
+    if (this.recognition) {
+      // Remove previous listeners if any
+      this.recognition.onresult = null;
+    }
+
     this.recognition = SpeechRecognition.getRecognition();
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
@@ -70,6 +87,7 @@ class ColorGame extends React.Component {
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log('instruction output: Start listening...');
+      this.setupRecognition(); // Re-set up recognition to ensure event listener is properly attached
       this.recognition.start(); // Explicitly start the recognition
       this.setState({ listening: true }, () => {
         console.log('Listening state updated: ', this.state.listening);
@@ -99,34 +117,44 @@ class ColorGame extends React.Component {
   handleTranscript(transcript) {
     if (this.isSpeaking || !this.state.listening) return;
 
-    const cleanedTranscript = transcript.toLowerCase().trim();
-    const currentColorName = this.state.currentColorName.toLowerCase().trim();
+    console.log(`voice input processed: ${transcript}`);
 
-    console.log(`voice input processed: ${cleanedTranscript}`);
-
-    if (cleanedTranscript === 'what is it' || cleanedTranscript === 'what color') {
+    if (transcript === 'what is it' || transcript === 'what color') {
       console.log('voice input: What is it?');
       voiceHandler.speak('The color is ' + this.state.currentColorName);
-    } else if (cleanedTranscript === 'next') {
+    } else if (transcript === 'next') {
       console.log('voice input: next');
       this.setNewColor();
-    } else if (cleanedTranscript === 'stop' || cleanedTranscript === 'restart' || cleanedTranscript === 'reset') {
+    } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
       console.log('voice input: Stop or restart the game');
       this.stopListening();
-      this.setState({ currentColorName: '', gameStarted: false });
+      this.setState({ currentColorName: '', gameStarted: false }, () => {
+        console.log('Game stopped and reset.');
+      });
     } else {
-      console.log(`Checking answer: transcript: "${cleanedTranscript}" vs color: "${currentColorName}"`);
-      if (cleanedTranscript === currentColorName) {
-        voiceHandler.speak(`Well done! The color is ${this.state.currentColorName}.`);
-      } else {
-        voiceHandler.speak('Try again.');
-      }
+      // Check if the answer is correct
+      this.isCorrectColor(transcript);
+    }
+  }
+
+  isCorrectColor(transcript) {
+    const currentColorName = this.state.currentColorName;
+    const synonymsList = synonyms[currentColorName] || [];
+    const isCorrect =
+      transcript.includes(currentColorName) ||
+      synonymsList.some((syn) => transcript.includes(syn));
+
+    if (isCorrect) {
+      voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
+    } else {
+      voiceHandler.speak('Try again.');
     }
   }
 
   startGame() {
     console.log('Game started');
     this.setState({ gameStarted: true }, () => {
+      this.setupRecognition(); // Reinitialize recognition to ensure clean start
       this.setNewColor();
       this.startListening();
     });
