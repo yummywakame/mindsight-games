@@ -1,13 +1,13 @@
 /* index.css */
 
-/* Remove default margin and padding from the body and html */
 html, body {
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll bar */
   height: 100%;
-  overflow: hidden; /* Prevent scrolling */
+  width: 100%;
 }
 
-#root {
-  height: 100%;
+* {
+  box-sizing: border-box; /* Ensure padding doesn't affect width calculations */
 }

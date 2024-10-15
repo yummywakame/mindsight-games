@@ -1,10 +1,18 @@
+/* HamburgerMenu.css */
+.hamburger-menu-container {
+  position: fixed;
+  top: 0; /* Aligns it with the top without padding */
+  left: 0; /* Aligns it with the left without padding */
+  z-index: 100; /* Ensure it stays on top */
+}
+
 .bm-burger-button {
   position: fixed;
   width: 36px;
   height: 30px;
   left: 20px;
   top: 20px;
-  z-index: 1000; /* Ensures the hamburger menu stays on top of other elements */
+  z-index: 101; /* Ensure button is above other content */
 }
 
 .bm-burger-bars {
@@ -14,21 +22,34 @@
 .bm-cross-button {
   height: 24px;
   width: 24px;
+  top: 15px !important; /* Align properly at the top */
+  right: 15px !important; /* Align properly at the right */
 }
 
 .bm-cross {
   background: #ffffff;
 }
 
+.bm-menu-wrap {
+  position: fixed; /* Fix the menu wrap as well */
+  height: 100%;
+  z-index: 99; /* Ensure it stays below the burger button */
+}
+
 .bm-menu {
   background: #373a47;
   padding: 2.5em 1.5em 0;
   font-size: 1.15em;
-  position: fixed;
-  z-index: 1100; /* Ensures menu content stays above other content */
+  width: 300px;
 }
 
-.bm-item-list a {
+.bm-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bm-menu a {
   color: #b8b7ad;
   text-decoration: none;
   display: block;
@@ -37,9 +58,4 @@
 
 .bm-item-list a:hover {
   color: white;
-}
-
-.bm-overlay {
-  background: rgba(0, 0, 0, 0.3); /* Adds an overlay when the menu is open */
-  z-index: 100; /* Ensure overlay stays below the menu content */
 }
