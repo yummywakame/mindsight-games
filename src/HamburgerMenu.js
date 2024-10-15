@@ -28,6 +28,7 @@ class HamburgerMenu extends React.Component {
         >
           <Link to="/" onClick={() => this.closeMenu()}>Home</Link>
           <Link to="/instructions" onClick={() => this.closeMenu()}>Instructions</Link>
+          <Link to="/preferences" onClick={() => this.closeMenu()}>Preferences</Link>
           <Link to="/color-game" onClick={() => this.closeMenu()}>Color Game</Link>
         </Menu>
       </div>
