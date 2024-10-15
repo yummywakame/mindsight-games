@@ -118,7 +118,6 @@ class ColorGame extends React.Component {
       console.log(`Checking answer: transcript: "${cleanedTranscript}" vs color: "${currentColorName}"`);
       if (cleanedTranscript === currentColorName) {
         voiceHandler.speak(`Well done! The color is ${this.state.currentColorName}.`);
-        this.setNewColor(); // Automatically advance to the next color if correct
       } else {
         voiceHandler.speak('Try again.');
       }
