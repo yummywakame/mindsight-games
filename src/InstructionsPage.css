@@ -1,0 +1,23 @@
+.instructions-container {
+    background-color: black;
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+  }
+  
+  .instructions-content {
+    max-width: 600px;
+    padding: 20px;
+  }
+  
+  .begin-game-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  
