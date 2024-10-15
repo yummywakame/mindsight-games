@@ -179,7 +179,7 @@ class ColorGame extends React.Component {
   stopGameAndReset() {
     this.stopListening();
     setTimeout(() => {
-      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
+      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: false }, () => {
         console.log('Game stopped and reset.');
       });
     }, 500); // Adding delay to ensure recognition fully stops before resetting
@@ -216,7 +216,7 @@ class ColorGame extends React.Component {
       >
         <div>
           <h1>Color Game</h1>
-          {!gameStarted && (
+          {!gameStarted ? (
             <button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent button click from triggering background click
@@ -232,21 +232,23 @@ class ColorGame extends React.Component {
             >
               Start Game
             </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent button click from triggering background click
+                console.log('instruction output: Stop Game button clicked');
+                this.stopGameAndReset();
+              }}
+              style={{
+                padding: '10px 20px',
+                marginTop: '20px',
+                fontSize: '1.2em',
+                cursor: 'pointer',
+              }}
+            >
+              Stop
+            </button>
           )}
-          <button
-            onClick={() => {
-              this.setState({ navigateToHome: true });
-            }}
-            style={{
-              padding: '10px 20px',
-              marginLeft: '20px',
-              fontSize: '1.2em',
-              cursor: 'pointer',
-              marginTop: !gameStarted ? '20px' : '0',
-            }}
-          >
-            Home
-          </button>
         </div>
       </div>
     );
