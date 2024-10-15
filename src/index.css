@@ -1,9 +1,13 @@
-/* index.css or a global CSS file */
-body, html, #root {
+/* index.css */
+
+/* Remove default margin and padding from the body and html */
+html, body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
   height: 100%;
-  width: 100%;
-  overflow: hidden;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+#root {
+  height: 100%;
 }
