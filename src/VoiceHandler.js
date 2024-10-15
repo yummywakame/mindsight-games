@@ -50,6 +50,10 @@ class VoiceHandler {
       this.speak(`Try again.`);
     }
   };
+
+  getSynonyms(color) {
+    return synonyms[color] || [];
+  }
 }
 
 const voiceHandlerInstance = new VoiceHandler();

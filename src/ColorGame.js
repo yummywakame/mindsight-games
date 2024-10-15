@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
 import voiceHandler from './VoiceHandler';
@@ -17,18 +18,6 @@ const colors = {
   orange: '#FF7F50',
 };
 
-// Extracting synonyms from VoiceHandler
-const synonyms = {
-  white: ['white', 'what', 'quite'],
-  green: ['green', 'forest green'],
-  purple: ['purple', 'violet', 'lavender'],
-  pink: ['pink', 'magenta'],
-  red: ['red', 'crimson', 'maroon'],
-  gray: ['gray', 'silver'],
-  blue: ['blue', 'sky'],
-  orange: ['orange', 'dark yellow'],
-};
-
 class ColorGame extends React.Component {
   constructor(props) {
     super(props);
@@ -36,6 +25,7 @@ class ColorGame extends React.Component {
       currentColorName: '',
       listening: false,
       gameStarted: false,
+      navigateToHome: false,
     };
     this.isSpeaking = false;
 
@@ -46,6 +36,7 @@ class ColorGame extends React.Component {
     this.setNewColor = this.setNewColor.bind(this);
     this.handleTranscript = this.handleTranscript.bind(this);
     this.startGame = this.startGame.bind(this);
+    this.stopGameAndReset = this.stopGameAndReset.bind(this);
   }
 
   componentDidMount() {
@@ -87,6 +78,13 @@ class ColorGame extends React.Component {
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log('instruction output: Start listening...');
+      if (this.recognition) {
+        try {
+          this.recognition.stop(); // Ensure previous recognition is stopped
+        } catch (error) {
+          console.warn('Warning: Attempt to stop recognition failed.');
+        }
+      }
       this.setupRecognition(); // Re-set up recognition to ensure event listener is properly attached
       this.recognition.start(); // Explicitly start the recognition
       this.setState({ listening: true }, () => {
@@ -98,7 +96,14 @@ class ColorGame extends React.Component {
   stopListening() {
     if (this.state.listening) {
       console.log('instruction output: Stop listening...');
-      this.recognition.stop(); // Explicitly stop the recognition
+      if (this.recognition) {
+        try {
+          this.recognition.stop(); // Explicitly stop the recognition
+          this.recognition.abort(); // Abort to ensure the microphone stops
+        } catch (error) {
+          console.warn('Warning: Attempt to stop recognition failed.');
+        }
+      }
       this.setState({ listening: false }, () => {
         console.log('Listening state updated: ', this.state.listening);
       });
@@ -127,10 +132,7 @@ class ColorGame extends React.Component {
       this.setNewColor();
     } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
       console.log('voice input: Stop or restart the game');
-      this.stopListening();
-      this.setState({ currentColorName: '', gameStarted: false }, () => {
-        console.log('Game stopped and reset.');
-      });
+      this.stopGameAndReset();
     } else {
       // Check if the answer is correct
       this.isCorrectColor(transcript);
@@ -139,7 +141,7 @@ class ColorGame extends React.Component {
 
   isCorrectColor(transcript) {
     const currentColorName = this.state.currentColorName;
-    const synonymsList = synonyms[currentColorName] || [];
+    const synonymsList = voiceHandler.getSynonyms(currentColorName);
     const isCorrect =
       transcript.includes(currentColorName) ||
       synonymsList.some((syn) => transcript.includes(syn));
@@ -153,6 +155,7 @@ class ColorGame extends React.Component {
 
   startGame() {
     console.log('Game started');
+    this.stopListening(); // Ensure any previous session is properly stopped
     this.setState({ gameStarted: true }, () => {
       this.setupRecognition(); // Reinitialize recognition to ensure clean start
       this.setNewColor();
@@ -160,7 +163,20 @@ class ColorGame extends React.Component {
     });
   }
 
+  stopGameAndReset() {
+    this.stopListening();
+    setTimeout(() => {
+      this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
+        console.log('Game stopped and reset.');
+      });
+    }, 500); // Adding delay to ensure recognition fully stops before resetting
+  }
+
   render() {
+    if (this.state.navigateToHome) {
+      return <Navigate to="/" />;
+    }
+
     const { gameStarted, currentColorName } = this.state;
 
     return (
@@ -206,7 +222,7 @@ class ColorGame extends React.Component {
           )}
           <button
             onClick={() => {
-              this.props.history.push('/');
+              this.setState({ navigateToHome: true });
             }}
             style={{
               padding: '10px 20px',
