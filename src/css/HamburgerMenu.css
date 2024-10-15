@@ -1,61 +1,40 @@
-/* HamburgerMenu.css */
-.hamburger-menu-container {
-  position: fixed;
-  top: 0; /* Aligns it with the top without padding */
-  left: 0; /* Aligns it with the left without padding */
-  z-index: 100; /* Ensure it stays on top */
-}
-
-.bm-burger-button {
-  position: fixed;
-  width: 36px;
-  height: 30px;
-  left: 20px;
+.hamburger-container {
+  position: absolute;
   top: 20px;
-  z-index: 101; /* Ensure button is above other content */
+  left: 20px;
+  z-index: 1000;
 }
 
-.bm-burger-bars {
-  background: #ffffff;
+.burger-icon {
+  cursor: pointer;
 }
 
-.bm-cross-button {
-  height: 24px;
-  width: 24px;
-  top: 15px !important; /* Align properly at the top */
-  right: 15px !important; /* Align properly at the right */
-}
-
-.bm-cross {
-  background: #ffffff;
-}
-
-.bm-menu-wrap {
-  position: fixed; /* Fix the menu wrap as well */
-  height: 100%;
-  z-index: 99; /* Ensure it stays below the burger button */
-}
-
-.bm-menu {
-  background: #373a47;
-  padding: 2.5em 1.5em 0;
+.hamburger-menu {
+  position: absolute;
+  top: 60px;
+  left: 20px;
+  width: 250px;
+  background-color: #373a47;
+  padding: 2.5em 1.5em;
   font-size: 1.15em;
-  width: 300px;
+  z-index: 1000;
+  border-radius: 8px;
 }
 
-.bm-item-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.hamburger-menu ul {
+  list-style: none;
+  padding: 0;
 }
 
-.bm-menu a {
-  color: #b8b7ad;
-  text-decoration: none;
-  display: block;
+.hamburger-menu li {
   margin-bottom: 10px;
 }
 
-.bm-item-list a:hover {
+.hamburger-menu a {
+  color: #b8b7ad;
+  text-decoration: none;
+}
+
+.hamburger-menu a:hover {
   color: white;
 }
