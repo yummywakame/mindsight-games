@@ -138,19 +138,40 @@ class ColorGame extends React.Component {
     console.log(`voice input processed: ${transcript}`);
 
     if (transcript === 'what is it' || transcript === 'what color') {
-      console.log('voice input: What is it?');
-      voiceHandler.speak('The color is ' + this.state.currentColorName);
+        console.log('voice input: What is it?');
+        voiceHandler.speak('The color is ' + this.state.currentColorName);
     } else if (transcript === 'next') {
-      console.log('voice input: next');
-      this.setNewColor();
+        console.log('voice input: next');
+        this.setNewColor();
     } else if (transcript === 'stop' || transcript === 'restart' || transcript === 'reset') {
-      console.log('voice input: Stop or restart the game');
-      this.stopGameAndReset();
+        console.log('voice input: Stop or restart the game');
+        this.stopGameAndReset();
     } else {
-      // Check if the answer is correct
-      this.isCorrectColor(transcript);
+        const currentColorName = this.state.currentColorName;
+        const synonymsList = voiceHandler.getSynonyms(currentColorName);
+
+        // Check if the input matches the correct color or its synonyms
+        const isCorrect =
+            transcript.includes(currentColorName) ||
+            synonymsList.some((syn) => transcript.includes(syn));
+
+        if (isCorrect) {
+            voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
+        } else {
+            // Check if the transcript is any color or its synonym
+            const isAnyColor = Object.keys(colors).some((color) => {
+                return (
+                    transcript.includes(color) ||
+                    voiceHandler.getSynonyms(color).some((syn) => transcript.includes(syn))
+                );
+            });
+
+            if (isAnyColor) {
+                voiceHandler.speak('Try again.');
+            }
+        }
     }
-  }
+}
 
   isCorrectColor(transcript) {
     const currentColorName = this.state.currentColorName;
