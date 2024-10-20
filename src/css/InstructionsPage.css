@@ -1,0 +1,20 @@
+/* InstructionsPage.css */
+
+.InstructionsPage {
+    background-color: black;
+    color: white;
+    min-height: 100vh;
+    padding: 20px;
+    font-family: 'Raleway', sans-serif;
+    display: flex;
+    justify-content: center; /* Centers the container */
+    align-items: center;     /* Vertically center the content */
+  }
+  
+  .instructions-content {
+    max-width: 600px;         /* Set the max width for the container */
+    margin: 0 auto;           /* Horizontally center the container */
+    text-align: left;         /* Align the text to the left */
+    flex: 1;
+    min-width: 250px;
+  }
