@@ -1,36 +1,54 @@
+/* PreferencesPage.css */
+
 .Preferences {
-    text-align: center;
-    color: white;
-    font-family: 'Raleway', sans-serif;
-    padding: 20px;
-  }
-  
-  .color-list {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .color-option {
-    display: flex;
-    align-items: center;
-    background-color: black;
-    padding: 10px;
-    border-radius: 5px;
-    width: 150px;
-    justify-content: space-between;
-  }
-  
-  .color-option input {
-    margin-right: 10px;
-  }
-  
-  .save-button {
-    padding: 10px 20px;
-    margin-top: 20px;
-    font-size: 1.2em;
-    cursor: pointer;
-  }
-  
+  text-align: center;
+  color: white;
+  font-family: 'Raleway', sans-serif;
+  padding: 20px;
+}
+
+.color-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.color-option {
+  display: flex;
+  align-items: center;
+  background-color: black;
+  padding: 10px;
+  border-radius: 5px;
+  width: 150px;
+  justify-content: space-between;
+}
+
+.color-option input {
+  margin-right: 10px;
+}
+
+.accent-list,
+.gender-list {
+  margin-top: 20px;
+}
+
+.accent-list label,
+.gender-list label {
+  display: block;
+  margin: 10px 0;
+}
+
+.save-button {
+  padding: 10px 20px;
+  margin-top: 20px;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.notification {
+  color: green;
+  font-size: 1.2em;
+  margin-top: 10px;
+}

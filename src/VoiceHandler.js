@@ -1,60 +1,27 @@
-import Cookies from 'js-cookie';
+import Cookies from 'js-cookie'; // Import Cookies
 
-const synonyms = {
-  "white": ["white", "what", "quite"],
-  "green": ["green", "forest green"],
-  "purple": ["purple", "violet", "lavender"],
-  "pink": ["pink", "magenta"],
-  "red": ["red", "crimson", "maroon"],
-  "gray": ["gray", "silver"],
-  "blue": ["blue", "sky"],
-  "orange": ["orange", "dark yellow"]
-};
+const voices = window.speechSynthesis.getVoices();
 
-class VoiceHandler {
-  constructor() {
-    this.voice = window.speechSynthesis.getVoices()[0]; // Default voice
+function getVoice(accent, gender) {
+  const voiceGender = gender === 'female' ? 'female' : 'male';
+  const voiceAccent = accent === 'british' ? 'en-GB' : 'en-US'; // en-GB for British, en-US for American
 
-    // Load preferences from cookies if available
-    const savedPreferences = Cookies.get('voicePreferences');
-    if (savedPreferences) {
-      try {
-        const parsedPreferences = JSON.parse(savedPreferences);
-        if (parsedPreferences) {
-          this.voiceGender = parsedPreferences.gender;
-          this.voiceAccent = parsedPreferences.accent;
-        }
-      } catch (error) {
-        console.error("Error parsing voicePreferences from cookies:", error);
-      }
-    }
-  }
+  const selectedVoice = voices.find(voice =>
+    voice.lang.includes(voiceAccent) && voice.name.toLowerCase().includes(voiceGender)
+  );
 
-  speak = (message) => {
-    const synth = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.voice = this.voice;
-    synth.speak(utterance);
-  };
-
-  checkAnswer = (userInput, currentColor, colors) => {
-    const matchedColor = Object.keys(colors).find(
-      (color) =>
-        userInput.includes(color) ||
-        (synonyms[color] && synonyms[color].some((synonym) => userInput.includes(synonym)))
-    );
-
-    if (matchedColor && currentColor === colors[matchedColor]) {
-      this.speak(`Well done! The color is ${matchedColor}.`);
-    } else {
-      this.speak(`Try again.`);
-    }
-  };
-
-  getSynonyms(color) {
-    return synonyms[color] || [];
-  }
+  return selectedVoice || voices[0]; // Fallback to first voice if none found
 }
 
-const voiceHandlerInstance = new VoiceHandler();
-export default voiceHandlerInstance;
+function speak(text) {
+  const accent = Cookies.get('accent') || 'american'; // Default to American if no cookie
+  const gender = Cookies.get('gender') || 'male'; // Default to Male if no cookie
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.voice = getVoice(accent, gender); // Use selected voice
+  window.speechSynthesis.speak(utterance);
+}
+
+const voiceHandler = { speak, getVoice }; // Assign to a variable before export
+
+export default voiceHandler; // Export module

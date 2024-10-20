@@ -17,12 +17,18 @@ const colors = {
 
 function Preferences() {
   const [selectedColors, setSelectedColors] = useState({});
+  const [accent, setAccent] = useState('american'); // Default accent
+  const [gender, setGender] = useState('male'); // Default gender
+  const [notification, setNotification] = useState(''); // Notification message
 
   useEffect(() => {
-    const savedPreferences = Cookies.get('selectedColors');
-    if (savedPreferences) {
+    const savedColors = Cookies.get('selectedColors');
+    const savedAccent = Cookies.get('accent');
+    const savedGender = Cookies.get('gender');
+
+    if (savedColors) {
       try {
-        setSelectedColors(JSON.parse(savedPreferences));
+        setSelectedColors(JSON.parse(savedColors));
       } catch (error) {
         console.error('Error parsing saved preferences:', error);
       }
@@ -32,6 +38,14 @@ function Preferences() {
         initialColors[color] = true;
       });
       setSelectedColors(initialColors);
+    }
+
+    if (savedAccent) {
+      setAccent(savedAccent);
+    }
+
+    if (savedGender) {
+      setGender(savedGender);
     }
   }, []);
 
@@ -44,12 +58,22 @@ function Preferences() {
 
   const handleSavePreferences = () => {
     Cookies.set('selectedColors', JSON.stringify(selectedColors), { expires: 365 });
-    // Removed the alert here
+    Cookies.set('accent', accent, { expires: 365 });
+    Cookies.set('gender', gender, { expires: 365 });
+
+    // Show notification
+    setNotification('Your preferences have been applied.');
+
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      setNotification('');
+    }, 3000);
   };
 
   return (
     <div className="Preferences">
       <h2>Choose your colors:</h2>
+      {notification && <p className="notification">{notification}</p>} {/* Subtle notification */}
       <p>The same color might appear multiple times in a row. This is by design.</p>
       <div className="color-list">
         {Object.keys(colors).map((color) => (
@@ -59,12 +83,61 @@ function Preferences() {
               checked={selectedColors[color]}
               onChange={() => handleColorToggle(color)}
             />
-            <span>{color}</span>
+            <span style={color === 'white' ? { color: 'black' } : {}}>{color}</span>
           </label>
         ))}
       </div>
-      <button className="save-button" onClick={handleSavePreferences}>
-        Save
+
+      <h3>Accent:</h3>
+      <div className="accent-list">
+        <label>
+          <input
+            type="radio"
+            name="accent"
+            value="american"
+            checked={accent === 'american'}
+            onChange={() => setAccent('american')}
+          />
+          🇺🇸 American
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="accent"
+            value="british"
+            checked={accent === 'british'}
+            onChange={() => setAccent('british')}
+          />
+          🇬🇧 British
+        </label>
+      </div>
+
+      <h3>Gender:</h3>
+      <div className="gender-list">
+        <label>
+          <input
+            type="radio"
+            name="gender"
+            value="male"
+            checked={gender === 'male'}
+            onChange={() => setGender('male')}
+          />
+          Male
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="gender"
+            value="female"
+            checked={gender === 'female'}
+            onChange={() => setGender('female')}
+          />
+          Female
+        </label>
+      </div>
+
+      <button className="apply-button" onClick={handleSavePreferences}>
+        Apply
       </button>
     </div>
   );
