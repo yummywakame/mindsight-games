@@ -146,17 +146,12 @@ class ColorGame extends React.Component {
     return (
       <div className="color-game-container">
         <h1 className="color-game-title">Color Game</h1>
-        {gameStarted ? (
-          <div>
-            <GameControls stopGame={this.stopGameAndReset} />
-          </div>
-        ) : (
-          <div>
-            <button onClick={this.startGame} className="start-game-button">
-              Start Game
-            </button>
-          </div>
-        )}
+        {/* Only GameControls is responsible for the start/stop button */}
+        <GameControls
+          gameStarted={this.state.gameStarted}
+          startGame={this.startGame}
+          stopGame={this.stopGameAndReset}
+        />
       </div>
     );
   }

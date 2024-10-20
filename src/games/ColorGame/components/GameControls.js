@@ -43,4 +43,3 @@ const styles = {
 };
 
 export default GameControls;
-
