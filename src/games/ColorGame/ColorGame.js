@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
-import voiceHandler from '../../VoiceHandler';
+import voiceHandler from '../../VoiceHandler';  // Import updated voice handler
 import './ColorGame.css';
 
 const colors = {
@@ -25,6 +25,7 @@ class ColorGame extends React.Component {
       currentColorName: '',
       listening: false,
       gameStarted: false,
+      correctGuess: false,  // Track if the correct guess was made
       navigateToHome: false,
       selectedColors: {},
     };
@@ -157,7 +158,7 @@ class ColorGame extends React.Component {
     const availableColors = Object.keys(selectedColors).filter((color) => selectedColors[color]);
     const randomColorName = availableColors[Math.floor(Math.random() * availableColors.length)];
     console.log(`New color chosen: ${randomColorName}`);
-    this.setState({ currentColorName: randomColorName }, () => {
+    this.setState({ currentColorName: randomColorName, correctGuess: false }, () => {
       voiceHandler.speak("What's this color?");
     });
   }
@@ -182,15 +183,15 @@ class ColorGame extends React.Component {
   }
 
   isCorrectColor(transcript) {
-    const currentColorName = this.state.currentColorName;
+    const { currentColorName } = this.state;
     const synonymsList = voiceHandler.getSynonyms(currentColorName);
-    const isCorrect =
-      transcript.includes(currentColorName) ||
-      synonymsList.some((syn) => transcript.includes(syn));
 
-    if (isCorrect) {
-      voiceHandler.speak(`Well done! The color is ${currentColorName}.`);
-    } else if (Object.keys(colors).some((color) => transcript.includes(color))) {
+    if (transcript === currentColorName || synonymsList.includes(transcript)) {
+      console.log(`Correct color: ${currentColorName}`);
+      voiceHandler.speak('Correct!');
+      this.setState({ correctGuess: true }); // Stay on the same color after a correct guess
+    } else {
+      console.log(`Incorrect color: ${transcript}`);
       voiceHandler.speak('Try again.');
     }
   }
