@@ -58,7 +58,6 @@ class ColorGame extends React.Component {
   }
 
   initializeColorPreferences() {
-    // Load saved preferences from cookies if available
     const savedPreferences = Cookies.get('selectedColors');
     if (savedPreferences) {
       try {
@@ -69,7 +68,6 @@ class ColorGame extends React.Component {
         this.setAllColorsSelected();
       }
     } else {
-      // No cookie found or cookie is missing
       this.setAllColorsSelected();
     }
   }
@@ -80,7 +78,6 @@ class ColorGame extends React.Component {
       initialColors[color] = true;
     });
     this.setState({ selectedColors: initialColors }, () => {
-      // Save the initial preferences as a cookie immediately after setting
       Cookies.set('selectedColors', JSON.stringify(initialColors), { expires: 365 });
       console.log('Initial color preferences cookie created with all colors selected.');
     });
@@ -92,7 +89,6 @@ class ColorGame extends React.Component {
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
 
-      // Adding event listener for recognition results
       this.recognition.onresult = (event) => {
         if (this.isSpeaking || !this.state.listening) return;
 
@@ -113,14 +109,14 @@ class ColorGame extends React.Component {
   cleanupRecognition() {
     if (this.recognition) {
       try {
-        this.recognition.onresult = null; // Remove event listener
-        this.recognition.stop(); // Stop listening
-        this.recognition.abort(); // Abort to ensure the mic is stopped completely
+        this.recognition.onresult = null;
+        this.recognition.stop();
+        this.recognition.abort();
       } catch (error) {
         console.warn('Warning: Attempt to stop recognition failed.');
       } finally {
-        SpeechRecognition.stopListening(); // Additional cleanup to ensure the mic stops
-        this.recognition = null; // Clean up recognition instance
+        SpeechRecognition.stopListening();
+        this.recognition = null;
       }
     }
   }
@@ -128,9 +124,9 @@ class ColorGame extends React.Component {
   startListening() {
     if (!this.isSpeaking && !this.state.listening) {
       console.log('instruction output: Start listening...');
-      this.cleanupRecognition(); // Clean up any previous recognition
-      this.setupRecognition(); // Set up recognition again
-      SpeechRecognition.startListening({ continuous: true }); // Start listening using SpeechRecognition API
+      this.cleanupRecognition();
+      this.setupRecognition();
+      SpeechRecognition.startListening({ continuous: true });
       this.setState({ listening: true }, () => {
         console.log('Listening state updated: ', this.state.listening);
       });
@@ -148,7 +144,7 @@ class ColorGame extends React.Component {
       } catch (error) {
         console.warn('Warning: Attempt to stop recognition failed.');
       } finally {
-        SpeechRecognition.stopListening(); // Additional stop to ensure everything stops
+        SpeechRecognition.stopListening();
       }
       this.setState({ listening: false }, () => {
         console.log('Listening state updated: ', this.state.listening);
@@ -181,7 +177,6 @@ class ColorGame extends React.Component {
       console.log('voice input: Stop or restart the game');
       this.stopGameAndReset();
     } else {
-      // Check if the answer is correct
       this.isCorrectColor(transcript);
     }
   }
@@ -202,9 +197,9 @@ class ColorGame extends React.Component {
 
   startGame() {
     console.log('Game started');
-    this.cleanupRecognition(); // Ensure any previous session is properly stopped
+    this.cleanupRecognition();
     this.setState({ gameStarted: true }, () => {
-      this.setupRecognition(); // Reinitialize recognition to ensure clean start
+      this.setupRecognition();
       this.setNewColor();
       this.startListening();
     });
@@ -216,7 +211,7 @@ class ColorGame extends React.Component {
       this.setState({ currentColorName: '', gameStarted: false, navigateToHome: true }, () => {
         console.log('Game stopped and reset.');
       });
-    }, 500); // Adding delay to ensure recognition fully stops before resetting
+    }, 500);
   }
 
   render() {
@@ -235,33 +230,16 @@ class ColorGame extends React.Component {
             this.setNewColor();
           }
         }}
-        style={{
-          backgroundColor: currentColorName ? colors[currentColorName] : 'black',
-          height: '100vh',
-          width: '100vw',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: "'Raleway', sans-serif",
-          color: 'white',
-          textAlign: 'center',
-          cursor: 'pointer',
-        }}
       >
         <div>
           <h1>Color Game</h1>
           {!gameStarted && (
             <button
+              className="StartGameButton"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent button click from triggering background click
+                e.stopPropagation();
                 console.log('instruction output: Start Game button clicked');
                 this.startGame();
-              }}
-              style={{
-                padding: '10px 20px',
-                marginTop: '20px',
-                fontSize: '1.2em',
-                cursor: 'pointer',
               }}
             >
               Start Game
