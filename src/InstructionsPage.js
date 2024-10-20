@@ -2,29 +2,34 @@ import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 
 const colors = {
-  "black": "#000000",
-  "white": "#FFFFFF",
-  "gray": "#808080",
-  "yellow": "#FFD700",
-  "green": "#008000",
-  "blue": "#1E90FF",
-  "purple": "#6A5ACD",
-  "pink": "#FF00FF",
-  "red": "#DC143C",
-  "orange": "#FF7F50"
+  black: '#000000',
+  white: '#FFFFFF',
+  gray: '#808080',
+  yellow: '#FFD700',
+  green: '#008000',
+  blue: '#1E90FF',
+  purple: '#6A5ACD',
+  pink: '#FF00FF',
+  red: '#DC143C',
+  orange: '#FF7F50',
 };
 
 const InstructionsPage = ({ onBeginGame, onBack, onSavePreferences }) => {
   const [selectedColors, setSelectedColors] = useState([]);
 
   useEffect(() => {
-    // Load saved color preferences from cookies if available
     const savedColors = Cookies.get('selectedColors');
     if (savedColors) {
-      setSelectedColors(JSON.parse(savedColors));
+      try {
+        // Convert the saved preferences to an array, if necessary
+        const parsedColors = JSON.parse(savedColors);
+        setSelectedColors(Array.isArray(parsedColors) ? parsedColors : Object.keys(parsedColors));
+      } catch (error) {
+        console.error('Error parsing saved preferences:', error);
+        setSelectedColors(Object.keys(colors)); // Fall back to selecting all colors
+      }
     } else {
-      // If no saved preferences, select all colors by default
-      setSelectedColors(Object.keys(colors));
+      setSelectedColors(Object.keys(colors)); // Default to selecting all colors
     }
   }, []);
 
@@ -107,7 +112,7 @@ const InstructionsPage = ({ onBeginGame, onBack, onSavePreferences }) => {
                 >
                   <input
                     type="checkbox"
-                    checked={selectedColors.includes(color)}
+                    checked={selectedColors.includes(color)} // Ensure selectedColors is an array
                     onChange={() => handleCheckboxChange(color)}
                     style={{
                       position: "absolute",
