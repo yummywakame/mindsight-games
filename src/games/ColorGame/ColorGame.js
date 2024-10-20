@@ -1,8 +1,9 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import GameControls from './components/GameControls';
 import voiceHandler from '../../VoiceHandler';
-import './ColorGame.css';
+import './ColorGame.css'; // Ensure all relevant styling is handled here
 
 class ColorGame extends React.Component {
   constructor(props) {
@@ -25,18 +26,20 @@ class ColorGame extends React.Component {
     if (voiceHandler.browserSupportsSpeechRecognition()) {
       this.setupRecognition();
     } else {
-      console.error('Speech recognition is not supported in this browser');
+      console.error('Speech recognition is not supported in this browser.');
     }
   };
 
   initializeColorPreferences = () => {
-    const savedColors = Cookies.get('selectedColors'); // This line is already using Cookies.get, not getJSON
+    const savedColors = Cookies.get('selectedColors');
     if (savedColors) {
-      const parsedColors = JSON.parse(savedColors); // Manually parse the stringified JSON
+      const parsedColors = JSON.parse(savedColors);
       this.setState({ selectedColors: parsedColors });
+      console.log('Loaded selected colors from cookies:', parsedColors);
+    } else {
+      console.log('No selected colors found in cookies.');
     }
   };
-  
 
   setupRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -47,56 +50,72 @@ class ColorGame extends React.Component {
 
     this.recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript.trim().toLowerCase();
+      console.log('Received voice input:', transcript);
       this.handleTranscript(transcript);
     };
 
     this.recognition.onend = () => {
       if (this.state.listening) {
         this.startListening(); // Automatically restart listening if the game is ongoing
+        console.log('Restarting speech recognition...');
       }
     };
+
+    console.log('Speech recognition set up.');
   };
 
   startListening = () => {
     this.recognition.start();
     this.setState({ listening: true });
+    console.log('Started listening for voice input...');
   };
 
   stopListening = () => {
     this.recognition.stop();
     this.setState({ listening: false });
+    console.log('Stopped listening for voice input.');
   };
 
   setNewColor = () => {
-    const colors = ['red', 'blue', 'yellow', 'green', 'orange', 'purple'];
+    const colors = Object.keys(this.state.selectedColors).filter(
+      (color) => this.state.selectedColors[color]
+    );
     const randomColor = colors[Math.floor(Math.random() * colors.length)];
     this.setState({ currentColorName: randomColor, correctGuess: false });
+    console.log('New color set:', randomColor);
     voiceHandler.speak(`What's this color?`);
   };
 
   handleTranscript = (transcript) => {
+    console.log('Processing transcript:', transcript);
     const { currentColorName } = this.state;
 
     if (this.isCorrectColor(transcript)) {
       voiceHandler.speak(`Yes, it is ${currentColorName}`);
       this.setState({ correctGuess: true });
+      console.log('Correct guess:', currentColorName);
     } else if (transcript === 'next') {
       this.setNewColor();
     } else if (transcript === 'what is it') {
       voiceHandler.speak(`It is ${currentColorName}`);
+      console.log('Revealed the color:', currentColorName);
     } else {
       voiceHandler.speak('Try again.');
+      console.log('Incorrect guess. Prompting to try again.');
     }
   };
 
   isCorrectColor = (transcript) => {
     const { currentColorName } = this.state;
     const synonyms = voiceHandler.getSynonyms(currentColorName);
-    return transcript === currentColorName || synonyms.includes(transcript);
+    const isCorrect = transcript.includes(currentColorName) || synonyms.includes(transcript);
+    console.log(`Checking if '${transcript}' matches '${currentColorName}' or synonyms:`, synonyms);
+    return isCorrect;
   };
 
   startGame = () => {
     this.setState({ gameStarted: true, correctGuess: false });
+    console.log('Game started.');
     this.setNewColor();
     this.startListening();
   };
@@ -108,15 +127,21 @@ class ColorGame extends React.Component {
       correctGuess: false,
       currentColorName: '',
     });
+    console.log('Game stopped and reset.');
   };
 
   cleanupRecognition = () => {
     this.recognition = null;
     this.setState({ listening: false });
+    console.log('Speech recognition cleaned up.');
   };
 
   render() {
     const { gameStarted } = this.state;
+
+    if (this.state.navigateToHome) {
+      return <Navigate to="/" />;
+    }
 
     return (
       <div className="color-game-container">
