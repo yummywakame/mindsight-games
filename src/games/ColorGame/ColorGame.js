@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import SpeechRecognition from 'react-speech-recognition';
 import Cookies from 'js-cookie';
-import voiceHandler from './VoiceHandler';
-import './css/ColorGame.css';
+import voiceHandler from '../../VoiceHandler';
+import './ColorGame.css';
 
 const colors = {
   black: '#000000',
@@ -220,10 +220,12 @@ class ColorGame extends React.Component {
     }
 
     const { gameStarted, currentColorName } = this.state;
+    const backgroundColor = currentColorName ? colors[currentColorName] : 'black';
 
     return (
       <div
         className="ColorGame"
+        style={{ backgroundColor }}  // Dynamically set the background color
         onClick={(e) => {
           if (e.target === e.currentTarget && gameStarted) {
             console.log('instruction output: Screen clicked to get a new color');

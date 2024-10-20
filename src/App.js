@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Routes, Link } from 'react-router-dom';
-import ColorGame from './ColorGame';
+import ColorGame from './games/ColorGame/ColorGame'; // Updated path
 import InstructionsPage from './InstructionsPage';
 import PreferencesPage from './PreferencesPage';
 import HamburgerMenu from './HamburgerMenu';
