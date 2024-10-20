@@ -19,7 +19,6 @@ function Preferences() {
   const [selectedColors, setSelectedColors] = useState({});
 
   useEffect(() => {
-    // Load saved preferences from cookies if available
     const savedPreferences = Cookies.get('selectedColors');
     if (savedPreferences) {
       try {
@@ -28,7 +27,6 @@ function Preferences() {
         console.error('Error parsing saved preferences:', error);
       }
     } else {
-      // Initialize with all colors selected
       const initialColors = {};
       Object.keys(colors).forEach((color) => {
         initialColors[color] = true;
@@ -46,7 +44,7 @@ function Preferences() {
 
   const handleSavePreferences = () => {
     Cookies.set('selectedColors', JSON.stringify(selectedColors), { expires: 365 });
-    alert('Preferences saved successfully!');
+    // Removed the alert here
   };
 
   return (
