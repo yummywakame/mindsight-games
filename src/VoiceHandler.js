@@ -1,11 +1,8 @@
-import Cookies from 'js-cookie';
-
-const voices = window.speechSynthesis.getVoices();
-const defaultVoice = voices.find(voice => voice.name.includes('Microsoft David')) || voices[0];
-
 const voiceHandler = {
   speak(text) {
     const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    const defaultVoice = voices.find(voice => voice.name.includes('Microsoft David')) || voices[0];
     utterance.voice = defaultVoice;
     utterance.rate = 1;
     window.speechSynthesis.speak(utterance);
@@ -26,6 +23,30 @@ const voiceHandler = {
     };
 
     return synonyms[color] || [];
+  },
+
+  setupRecognition(onResult) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.onresult = event => {
+      const transcript = event.results[event.resultIndex][0].transcript.trim().toLowerCase();
+      onResult(transcript);
+    };
+    return recognition;
+  },
+
+  startRecognition(recognitionInstance) {
+    recognitionInstance.start();
+  },
+
+  stopRecognition(recognitionInstance) {
+    recognitionInstance.stop();
+  },
+
+  browserSupportsSpeechRecognition() {
+    return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
   }
 };
 
