@@ -1,28 +1,27 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import GameControls from './components/GameControls';
+import GameDisplay from './components/GameDisplay';
 import voiceHandler from '../../VoiceHandler';
-import './ColorGame.css'; // Ensure all relevant styling is handled here
+import { colors } from '../../Preferences';
+import './ColorGame.css';
 
 class ColorGame extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       currentColorName: '',
+      currentColorHex: '',
       listening: false,
       gameStarted: false,
       correctGuess: false,
       navigateToHome: false,
       selectedColors: {},
     };
-
-    this.isSpeaking = false;
   }
 
   componentDidMount = () => {
     this.initializeColorPreferences();
-
     if (voiceHandler.browserSupportsSpeechRecognition()) {
       this.setupRecognition();
     } else {
@@ -56,7 +55,7 @@ class ColorGame extends React.Component {
 
     this.recognition.onend = () => {
       if (this.state.listening) {
-        this.startListening(); // Automatically restart listening if the game is ongoing
+        this.startListening();
         console.log('Restarting speech recognition...');
       }
     };
@@ -77,12 +76,17 @@ class ColorGame extends React.Component {
   };
 
   setNewColor = () => {
-    const colors = Object.keys(this.state.selectedColors).filter(
+    const colorNames = Object.keys(this.state.selectedColors).filter(
       (color) => this.state.selectedColors[color]
     );
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    this.setState({ currentColorName: randomColor, correctGuess: false });
-    console.log('New color set:', randomColor);
+    const randomColor = colorNames[Math.floor(Math.random() * colorNames.length)];
+    const hexValue = colors[randomColor];
+    this.setState({
+      currentColorName: randomColor,
+      currentColorHex: hexValue,
+      correctGuess: false,
+    });
+    console.log(`New color set: ${randomColor} (${hexValue})`);
     voiceHandler.speak(`What's this color?`);
   };
 
@@ -96,7 +100,7 @@ class ColorGame extends React.Component {
       console.log('Correct guess:', currentColorName);
     } else if (transcript === 'next') {
       this.setNewColor();
-    } else if (transcript === 'what is it') {
+    } else if (transcript.includes('what')) {
       voiceHandler.speak(`It is ${currentColorName}`);
       console.log('Revealed the color:', currentColorName);
     } else {
@@ -126,33 +130,26 @@ class ColorGame extends React.Component {
       gameStarted: false,
       correctGuess: false,
       currentColorName: '',
+      currentColorHex: '',
     });
     console.log('Game stopped and reset.');
   };
 
-  cleanupRecognition = () => {
-    this.recognition = null;
-    this.setState({ listening: false });
-    console.log('Speech recognition cleaned up.');
-  };
-
   render() {
-    const { gameStarted } = this.state;
+    const { gameStarted, currentColorHex, navigateToHome } = this.state;
 
-    if (this.state.navigateToHome) {
+    if (navigateToHome) {
       return <Navigate to="/" />;
     }
 
     return (
-      <div className="color-game-container">
-        <h1 className="color-game-title">Color Game</h1>
-        {/* Only GameControls is responsible for the start/stop button */}
-        <GameControls
-          gameStarted={this.state.gameStarted}
-          startGame={this.startGame}
-          stopGame={this.stopGameAndReset}
-        />
-      </div>
+      <GameDisplay
+        currentColorHex={currentColorHex}
+        gameStarted={gameStarted}
+        startGame={this.startGame}
+        stopGame={this.stopGameAndReset}
+        setNewColor={this.setNewColor}
+      />
     );
   }
 }

@@ -1,26 +1,24 @@
-// GameDisplay.js
-// This component handles displaying the current color and updating the background.
-// It takes three props:
-// - currentColorName: The current color name being displayed.
-// - gameStarted: A boolean that indicates if the game is running.
-// - setNewColor: A function that sets a new random color when the game is in progress.
-
 import React from 'react';
+import GameControls from './GameControls';
 
-const GameDisplay = ({ currentColorName, gameStarted, setNewColor }) => {
-  const backgroundColor = currentColorName ? currentColorName : 'black';
+// GameDisplay renders the background color based on the current color hex.
+// Also renders GameControls within it, to keep the controls in the same area as the display.
+
+const GameDisplay = ({ currentColorHex, gameStarted, startGame, stopGame, setNewColor }) => {
+  const backgroundColor = currentColorHex || 'black';
 
   return (
     <div
       className="ColorGame"
-      style={{ backgroundColor }} // Dynamically set the background color
+      style={{ backgroundColor }}
       onClick={(e) => {
-        if (e.target === e.currentTarget && gameStarted) {
+        if (gameStarted && e.target === e.currentTarget) {
           setNewColor();
         }
       }}
     >
       <h1>Color Game</h1>
+      <GameControls gameStarted={gameStarted} startGame={startGame} stopGame={stopGame} />
     </div>
   );
 };

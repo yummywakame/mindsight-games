@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 import './css/Preferences.css';  // Correct import path for the CSS file
 import { loadColorPreferences, saveColorPreferences } from './utils';
 
-const colors = {
+export const colors = {
   black: '#000000',
   white: '#FFFFFF',
   gray: '#808080',
@@ -74,4 +74,4 @@ function Preferences() {
   );
 }
 
-export default Preferences;
+export default { Preferences, colors };

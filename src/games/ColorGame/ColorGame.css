@@ -1,19 +1,44 @@
+/* ColorGame.css */
+
 .ColorGame {
-  background-color: black;
-  height: 100vh;
-  width: 100vw;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Raleway', sans-serif;
-  color: white;
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  color: #fff;
+  font-family: Arial, sans-serif;
   text-align: center;
-  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Ensure no extra scroll bars */
 }
 
-.StartGameButton {
+h1 {
+  font-size: 2em;
+  margin: 20px 0;
+}
+
+.game-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.start-button,
+.stop-button {
   padding: 10px 20px;
-  margin-top: 20px;
-  font-size: 1.2em;
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  background-color: #fff;
+  border: 2px solid #000;
+  border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.start-button:hover,
+.stop-button:hover {
+  background-color: #e0e0e0;
 }
