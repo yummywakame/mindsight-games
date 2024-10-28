@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import './css/Preferences.css';  // Correct import path for the CSS file
 import { loadColorPreferences, saveColorPreferences } from './utils';
 
@@ -74,4 +73,6 @@ function Preferences() {
   );
 }
 
-export default { Preferences, colors };
+export default Preferences;
+
+
