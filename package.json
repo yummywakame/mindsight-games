@@ -53,8 +53,6 @@
     "svgo": {
       "nth-check": "^2.0.1"
     },
-    "resolve-url-loader": {
-      "postcss": "^8.5.10"
-    }
+    "resolve-url-loader": "^5.0.0"
   }
 }
